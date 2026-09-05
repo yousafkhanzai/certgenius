@@ -20,6 +20,7 @@
 import 'dotenv/config'
 import type { Payload } from 'payload'
 import { getPayload } from 'payload'
+import { pathToFileURL } from 'url'
 import config from '../payload.config'
 import { paragraph, heading, richText } from './lexical'
 
@@ -499,7 +500,17 @@ async function run() {
   process.exit(0)
 }
 
-run().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Only actually run the CLI flow when this file is executed directly
+// (e.g. `tsx src/seed/run.ts` / `npm run seed`). Without this check, simply
+// *importing* seedContent from this file elsewhere (as ensure-db-schema.ts
+// does) would also trigger this block as a side effect of the import - so
+// every production build was accidentally running the seed logic twice at
+// the same time. Both copies raced to create the same admin user, and the
+// second one always lost with a duplicate-email error, which crashed the
+// whole build.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  run().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
