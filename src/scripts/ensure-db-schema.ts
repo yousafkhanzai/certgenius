@@ -9,6 +9,15 @@
 // `next build` even starts, makes table creation happen once, deterministically,
 // against the real database - so every page's queries always find the tables
 // already there.
+// Payload's built-in adapter only auto-creates tables when NODE_ENV is not
+// "production" (it expects a real migrations setup in production instead).
+// Vercel always builds with NODE_ENV=production, so without this override
+// table-creation was being silently skipped entirely - even though this
+// script reported success, because it never actually got to run.
+// This only affects this one short-lived script; the actual `next build`
+// that runs right after this still builds in real production mode.
+;(process.env as Record<string, string>).NODE_ENV = 'development'
+
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
