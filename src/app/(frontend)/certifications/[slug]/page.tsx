@@ -9,6 +9,8 @@ import React, { cache } from 'react'
 
 import RichText from '@/components/RichText'
 import { Media } from '@/components/Media'
+import { JsonLd } from '@/components/JsonLd'
+import { breadcrumbSchema, courseSchema } from '@/utilities/schema'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -43,6 +45,22 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
 
   return (
     <article className="pt-16 pb-24">
+      <JsonLd
+        data={courseSchema({
+          title: cert.title,
+          slug: cert.slug || decodedSlug,
+          summary: cert.summary,
+          vendor: cert.vendor,
+          examCode: cert.examCode,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Certifications', path: '/certifications' },
+          { name: cert.title, path: `/certifications/${cert.slug}` },
+        ])}
+      />
       <div className="container mb-8 max-w-[52rem]">
         <div className="flex flex-wrap items-center gap-2 mb-4 text-sm text-muted-foreground">
           <Link href="/certifications" className="underline">

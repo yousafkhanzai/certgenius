@@ -14,6 +14,8 @@ import { PostHero } from '@/heros/PostHero'
 import { generateMeta } from '@/utilities/generateMeta'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { JsonLd } from '@/components/JsonLd'
+import { articleSchema, breadcrumbSchema } from '@/utilities/schema'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -51,9 +53,30 @@ export default async function Post({ params: paramsPromise }: Args) {
 
   if (!post) return <PayloadRedirects url={url} />
 
+  const metaImage =
+    post.meta?.image && typeof post.meta.image === 'object' ? post.meta.image.url : undefined
+
   return (
     <article className="pt-16 pb-16">
       <PageClient />
+      <JsonLd
+        data={articleSchema({
+          title: post.title,
+          slug: post.slug,
+          description: post.meta?.description,
+          publishedAt: post.publishedAt,
+          updatedAt: post.updatedAt,
+          imageUrl: metaImage,
+          authorNames: post.populatedAuthors?.map((a) => a.name).filter((n): n is string => !!n),
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Blog', path: '/posts' },
+          { name: post.title, path: `/posts/${post.slug}` },
+        ])}
+      />
 
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />

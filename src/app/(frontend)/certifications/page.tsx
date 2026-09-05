@@ -5,6 +5,9 @@ import { getPayload } from 'payload'
 import Link from 'next/link'
 import React from 'react'
 
+import { JsonLd } from '@/components/JsonLd'
+import { breadcrumbSchema } from '@/utilities/schema'
+
 export const dynamic = 'force-static'
 export const revalidate = 600
 
@@ -21,6 +24,12 @@ export default async function CertificationsPage() {
 
   return (
     <div className="pt-24 pb-24">
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Certifications', path: '/certifications' },
+        ])}
+      />
       <div className="container mb-12">
         <div className="prose dark:prose-invert max-w-none">
           <h1>Certification Practice Tests</h1>
