@@ -85,15 +85,32 @@ export default async function Post({ params: paramsPromise }: Args) {
 
       <PostHero post={post} />
 
-      <div className="flex flex-col items-center gap-4 pt-8">
-        <div className="container">
-          <RichText className="max-w-[48rem] mx-auto" data={post.content} enableGutter={false} />
-          {post.relatedPosts && post.relatedPosts.length > 0 && (
-            <RelatedPosts
-              className="mt-12 max-w-[52rem] lg:grid lg:grid-cols-subgrid col-start-1 col-span-3 grid-rows-[2fr]"
-              docs={post.relatedPosts.filter((post) => typeof post === 'object')}
+      {/*
+        Reading-column layout: the post text stays in a fixed-width centered
+        column (readable, wraps normally like a normal article) with two
+        empty rails on either side reserved for ads. The rails only appear
+        on wide screens (xl and up, 1280px+) since there's no room for them
+        on tablet/mobile - the content column just uses the full width there.
+      */}
+      <div className="pt-8 pb-8">
+        <div className="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-8 px-4 xl:grid-cols-[minmax(160px,1fr)_minmax(0,48rem)_minmax(160px,1fr)] xl:px-8">
+          <aside className="hidden xl:block" aria-hidden="true" />
+
+          <div className="min-w-0">
+            <RichText
+              className="mx-auto max-w-none break-words"
+              data={post.content}
+              enableGutter={false}
             />
-          )}
+            {post.relatedPosts && post.relatedPosts.length > 0 && (
+              <RelatedPosts
+                className="mt-12"
+                docs={post.relatedPosts.filter((post) => typeof post === 'object')}
+              />
+            )}
+          </div>
+
+          <aside className="hidden xl:block" aria-hidden="true" />
         </div>
       </div>
     </article>
