@@ -1,16 +1,24 @@
 /**
- * Seeds sample content so the site isn't empty on first run:
+ * Seeds real launch content so the site isn't empty:
  * - an admin user you can log in with
- * - two certification categories
- * - two sample certifications (AWS AI Practitioner, Microsoft Azure AI Fundamentals)
+ * - certification categories
+ * - three real, published certifications (AWS AI Practitioner, Microsoft Azure
+ *   AI Fundamentals, Google Cloud Professional ML Engineer)
  * - five practice questions for each
  * - one sample blog post
  * - header/footer navigation links
  *
- * Run with: npm run seed
- * Safe to run more than once - it skips anything that already exists.
+ * This runs automatically as part of every production build (see
+ * src/scripts/ensure-db-schema.ts), so new certifications you add here go
+ * live the moment you push - no manual script running required.
+ *
+ * Can also be run by hand locally with: npm run seed
+ * Safe to run more than once - it skips anything that already exists, so
+ * adding one new certification to the arrays below and pushing is all it
+ * takes to publish it without touching anything already live.
  */
 import 'dotenv/config'
+import type { Payload } from 'payload'
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { paragraph, heading, richText } from './lexical'
@@ -18,9 +26,7 @@ import { paragraph, heading, richText } from './lexical'
 const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@certgenius.local'
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!'
 
-async function run() {
-  const payload = await getPayload({ config })
-
+export async function seedContent(payload: Payload) {
   payload.logger.info('Seeding sample content...')
 
   // 1. Admin user
@@ -46,8 +52,17 @@ async function run() {
       where: { title: { equals: name } },
       limit: 1,
     })
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
     categoryDocs[name] =
-      found.docs[0] || (await payload.create({ collection: 'categories', data: { title: name } }))
+      found.docs[0] ||
+      (await payload.create({
+        collection: 'categories',
+        data: { title: name, slug },
+        draft: false,
+      }))
   }
 
   // 3. Certifications
@@ -58,7 +73,7 @@ async function run() {
       vendor: 'AWS',
       examCode: 'AIF-C01',
       difficulty: 'beginner' as const,
-      category: [categoryDocs['AI & Machine Learning'].id, categoryDocs['Cloud Certifications'].id],
+      category: [Number(categoryDocs['AI & Machine Learning'].id), Number(categoryDocs['Cloud Certifications'].id)],
       summary:
         'A foundational certification that validates your understanding of AI, machine learning, and generative AI concepts on AWS.',
       passingScore: 70,
@@ -83,7 +98,7 @@ async function run() {
       vendor: 'Microsoft',
       examCode: 'AI-900',
       difficulty: 'beginner' as const,
-      category: [categoryDocs['AI & Machine Learning'].id, categoryDocs['Cloud Certifications'].id],
+      category: [Number(categoryDocs['AI & Machine Learning'].id), Number(categoryDocs['Cloud Certifications'].id)],
       summary:
         'An entry-level certification covering core AI concepts and how they map to Microsoft Azure AI services.',
       passingScore: 70,
@@ -99,6 +114,31 @@ async function run() {
         heading('Who Should Take This Exam'),
         paragraph(
           'It is aimed at both technical and non-technical audiences and does not require prior experience in AI, machine learning, or data science.',
+        ),
+      ]),
+    },
+    {
+      title: 'Google Cloud Professional ML Engineer',
+      slug: 'google-cloud-ml-engineer',
+      vendor: 'Google Cloud',
+      examCode: 'PMLE',
+      difficulty: 'advanced' as const,
+      category: [Number(categoryDocs['AI & Machine Learning'].id), Number(categoryDocs['Cloud Certifications'].id)],
+      summary:
+        'A professional-level certification for engineers who design, build, and deploy production machine learning models on Google Cloud with Vertex AI.',
+      passingScore: 70,
+      durationMinutes: 120,
+      overview: richText([
+        heading('What This Certification Covers'),
+        paragraph(
+          'The Google Cloud Professional Machine Learning Engineer certification validates the ability to design, build, and productionize ML models to solve business challenges using Google Cloud technologies and knowledge of proven ML models and techniques.',
+        ),
+        paragraph(
+          'It covers framing ML problems, architecting ML solutions, preparing and processing data, developing models, and automating and orchestrating ML pipelines using Vertex AI and related Google Cloud services.',
+        ),
+        heading('Who Should Take This Exam'),
+        paragraph(
+          'This is a professional-level exam aimed at ML engineers and data scientists with hands-on experience building and deploying models on Google Cloud. It assumes familiarity with ML fundamentals and is more advanced than entry-level cloud AI certifications like AWS AI Practitioner or Azure AI Fundamentals.',
         ),
       ]),
     },
@@ -262,10 +302,87 @@ async function run() {
         "Microsoft's Responsible AI principles include fairness, reliability & safety, privacy & security, inclusiveness, transparency, and accountability.",
       topic: 'Responsible AI',
     },
+    // Google Cloud Professional ML Engineer
+    {
+      certSlug: 'google-cloud-ml-engineer',
+      questionText: 'What is the primary purpose of Vertex AI on Google Cloud?',
+      options: [
+        {
+          text: 'A unified platform for building, training, deploying, and managing ML models across the full ML lifecycle',
+          isCorrect: true,
+        },
+        { text: 'A managed relational database for transactional workloads', isCorrect: false },
+        { text: 'A content delivery network for static websites', isCorrect: false },
+        { text: 'An identity and access management tool only', isCorrect: false },
+      ],
+      explanation:
+        'Vertex AI is Google Cloud\'s unified ML platform, covering data preparation, training, tuning, deployment, and monitoring of models in one place.',
+      topic: 'Vertex AI Fundamentals',
+    },
+    {
+      certSlug: 'google-cloud-ml-engineer',
+      questionText:
+        'Which Vertex AI capability automatically searches model architectures and hyperparameters to produce a strong model with minimal manual tuning?',
+      options: [
+        { text: 'Vertex AI AutoML', isCorrect: true },
+        { text: 'BigQuery reservations', isCorrect: false },
+        { text: 'Cloud Pub/Sub', isCorrect: false },
+        { text: 'Cloud CDN', isCorrect: false },
+      ],
+      explanation:
+        'Vertex AI AutoML trains high-quality models automatically with minimal effort and ML expertise required from the user.',
+      topic: 'AutoML & Model Development',
+    },
+    {
+      certSlug: 'google-cloud-ml-engineer',
+      questionText: 'What problem does a feature store, such as Vertex AI Feature Store, solve?',
+      options: [
+        {
+          text: 'It centralizes storage and serving of ML features so they stay consistent between training and serving',
+          isCorrect: true,
+        },
+        { text: 'It stores raw unstructured video files for archival purposes', isCorrect: false },
+        { text: 'It manages IAM roles and permissions', isCorrect: false },
+        { text: 'It hosts static marketing websites', isCorrect: false },
+      ],
+      explanation:
+        'A feature store provides a central, consistent source of features so the values used at training time match what is served in production, reducing training-serving skew.',
+      topic: 'Feature Engineering',
+    },
+    {
+      certSlug: 'google-cloud-ml-engineer',
+      questionText:
+        'Which Google Cloud service is best suited for building scalable, serverless data processing pipelines to prepare training data?',
+      options: [
+        { text: 'Dataflow', isCorrect: true },
+        { text: 'Cloud Speech-to-Text', isCorrect: false },
+        { text: 'Vertex AI Workbench notebooks alone', isCorrect: false },
+        { text: 'Cloud DNS', isCorrect: false },
+      ],
+      explanation:
+        'Dataflow is a fully managed, serverless service for building batch and streaming data processing pipelines, commonly used to prepare and transform training data at scale.',
+      topic: 'Data Pipelines',
+    },
+    {
+      certSlug: 'google-cloud-ml-engineer',
+      questionText: 'What does "model drift" refer to in a production ML system?',
+      options: [
+        {
+          text: "A decline in a model's predictive performance over time as real-world data patterns diverge from training data",
+          isCorrect: true,
+        },
+        { text: 'An increase in the volume of available training data', isCorrect: false },
+        { text: 'A reduction in cloud compute billing costs', isCorrect: false },
+        { text: 'Faster inference latency after deployment', isCorrect: false },
+      ],
+      explanation:
+        'Model drift happens when the statistical properties of production data change over time, causing a previously accurate model to become less reliable - which is why monitoring deployed models is part of MLOps.',
+      topic: 'ML Operations & Monitoring',
+    },
   ]
 
   for (const q of questionsInput) {
-    const certId = certDocs[q.certSlug].id
+    const certId = Number(certDocs[q.certSlug].id)
     const existing = await payload.find({
       collection: 'questions',
       where: {
@@ -307,7 +424,7 @@ async function run() {
         title: 'How to Pass the AWS AI Practitioner Exam: A Study Guide',
         slug: postSlug,
         _status: 'published',
-        authors: [adminUser.id],
+        authors: [Number(adminUser.id)],
         publishedAt: new Date().toISOString(),
         content: richText([
           paragraph(
@@ -371,6 +488,14 @@ async function run() {
   payload.logger.info('Navigation updated.')
 
   payload.logger.info('Seeding complete!')
+}
+
+// CLI entry point for running this by hand locally with `npm run seed`.
+// In production, seedContent() above is called directly from
+// src/scripts/ensure-db-schema.ts as part of every build instead.
+async function run() {
+  const payload = await getPayload({ config })
+  await seedContent(payload)
   process.exit(0)
 }
 

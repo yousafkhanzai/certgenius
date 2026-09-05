@@ -21,11 +21,21 @@
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
+import { seedContent } from '../seed/run'
 
 async function run() {
   console.log('Ensuring database schema is up to date...')
-  await getPayload({ config })
+  const payload = await getPayload({ config })
   console.log('Database schema is ready.')
+
+  // Publish/update launch content on every build. This is safe to run
+  // repeatedly - it looks up each certification, question, and page by its
+  // slug/text first and only creates what's missing, so it never duplicates
+  // or overwrites anything already published from the admin dashboard.
+  console.log('Publishing launch content...')
+  await seedContent(payload)
+  console.log('Launch content is ready.')
+
   process.exit(0)
 }
 
