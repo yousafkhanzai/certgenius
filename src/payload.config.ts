@@ -63,6 +63,12 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URL,
     },
+    // Auto-create/update database tables to match the collections above.
+    // Normally Payload only does this outside of production, but since this
+    // project doesn't use migration files yet, force it on so a brand new
+    // database (like a fresh Neon project) gets its tables created on first
+    // deploy instead of failing with "relation does not exist."
+    push: true,
   }),
   collections: [Pages, Posts, Certifications, Questions, Media, Categories, Users],
   cors: [getServerSideURL()].filter(Boolean),
