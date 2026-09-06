@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
           protocol: url.protocol.replace(':', '') as 'http' | 'https',
         }
       }),
+      // Vercel Blob storage (see src/plugins/index.ts) serves uploaded media
+      // from a per-project subdomain of this host.
+      { hostname: '*.public.blob.vercel-storage.com', protocol: 'https' as const },
     ],
   },
   webpack: (webpackConfig) => {
