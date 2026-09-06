@@ -1,4 +1,5 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
@@ -88,5 +89,30 @@ export const plugins: Plugin[] = [
         return [...defaultFields, ...searchFields]
       },
     },
+  }),
+  // Stores uploaded Media files in Vercel Blob storage instead of the local
+  // filesystem - a serverless deploy's local disk doesn't persist uploads
+  // across requests/deployments. Only activates once BLOB_READ_WRITE_TOKEN
+  // exists (Vercel sets it automatically when a Blob store is connected to
+  // this project) - until then, media uploads fall back to local storage.
+  //
+  // IMPORTANT: this plugin registers an admin-wide provider component
+  // (@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler)
+  // regardless of whether it's enabled - that entry MUST also exist in
+  // src/app/(payload)/admin/importMap.js or the entire admin dashboard
+  // fails to render (not just the upload screen). Normally `payload
+  // generate:importmap` keeps that file in sync automatically; it was
+  // added by hand here since this environment has no database connection
+  // to run that command against.
+  vercelBlobStorage({
+    enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+    collections: {
+      media: true,
+    },
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+    // Uploads go straight from the visitor's browser to Blob storage instead
+    // of through the Vercel server function, which otherwise caps uploads at
+    // 4.5MB - easy to exceed with an unresized photo straight off a phone.
+    clientUploads: true,
   }),
 ]
