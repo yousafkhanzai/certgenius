@@ -15,6 +15,9 @@ import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { TrustBar } from '@/components/Home/TrustBar'
 import { FeaturedCertifications } from '@/components/Home/FeaturedCertifications'
 import { NewsletterCTA } from '@/components/Home/NewsletterCTA'
+import { PlatformFeatures } from '@/components/Home/PlatformFeatures'
+import { LearningJourney } from '@/components/Home/LearningJourney'
+import { WhyChooseUs } from '@/components/Home/WhyChooseUs'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import type {
@@ -114,7 +117,10 @@ const HomeLayout: React.FC<{ layout: RequiredDataFromCollectionSlug<'pages'>['la
       <>
         <RenderBlocks blocks={blocks} />
         <TrustBar />
+        <PlatformFeatures />
         <FeaturedCertifications />
+        <LearningJourney />
+        <WhyChooseUs />
       </>
     )
   }
@@ -129,8 +135,11 @@ const HomeLayout: React.FC<{ layout: RequiredDataFromCollectionSlug<'pages'>['la
           blockTypes. */}
       <CallToActionBlock {...(heroBlock as unknown as CTABlockProps)} />
       <TrustBar />
+      <PlatformFeatures />
       <ContentBlock {...(featuresBlock as unknown as ContentBlockProps)} />
       <FeaturedCertifications />
+      <LearningJourney />
+      <WhyChooseUs />
       <div className="my-16">
         <NewsletterCTA {...(newsletterBlock as unknown as FormBlockType)} />
       </div>
