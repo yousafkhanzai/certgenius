@@ -78,17 +78,17 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
 
         <div className="flex flex-wrap gap-2 mb-4">
           {cert.vendor && (
-            <span className="text-xs uppercase tracking-wide rounded-full bg-muted px-3 py-1">
+            <span className="text-xs font-bold uppercase tracking-wide rounded-full bg-accent text-accent-foreground px-3 py-1.5">
               {cert.vendor}
             </span>
           )}
           {cert.examCode && (
-            <span className="text-xs uppercase tracking-wide rounded-full bg-muted px-3 py-1">
+            <span className="text-xs font-bold uppercase tracking-wide rounded-full bg-accent text-accent-foreground px-3 py-1.5">
               {cert.examCode}
             </span>
           )}
           {cert.difficulty && (
-            <span className="text-xs uppercase tracking-wide rounded-full bg-muted px-3 py-1">
+            <span className="text-xs font-bold uppercase tracking-wide rounded-full bg-chart-5 text-[oklch(20%_0.05_70deg)] px-3 py-1.5">
               {cert.difficulty}
             </span>
           )}
@@ -97,10 +97,10 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
         <h1 className="mb-4">{cert.title}</h1>
         {cert.summary && <p className="text-lg text-muted-foreground mb-6">{cert.summary}</p>}
 
-        <div className="flex flex-wrap gap-4 mb-10">
+        <div className="flex flex-wrap gap-3 mb-10">
           <Link
             href={`/certifications/${cert.slug}/practice`}
-            className="inline-flex items-center rounded-md bg-primary text-primary-foreground hover:opacity-90 px-5 py-3 font-medium no-underline"
+            className="inline-flex items-center rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 px-6 py-3 font-semibold no-underline"
           >
             Start Free Practice Test ({questionCount.totalDocs} question
             {questionCount.totalDocs === 1 ? '' : 's'})
@@ -110,7 +110,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
               href={cert.affiliateLink}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="inline-flex items-center rounded-md border px-5 py-3 font-medium no-underline"
+              className="inline-flex items-center rounded-full border border-input bg-background shadow-xs hover:bg-accent px-6 py-3 font-semibold no-underline"
             >
               Official Training / Exam Info
             </a>
@@ -118,17 +118,17 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
         </div>
 
         {(cert.passingScore || cert.durationMinutes) && (
-          <div className="flex flex-wrap gap-8 mb-10 text-sm">
+          <div className="flex flex-wrap gap-8 mb-10 p-6 rounded-2xl bg-card border border-border text-sm">
             {cert.passingScore && (
               <div>
                 <div className="text-muted-foreground">Passing Score</div>
-                <div className="font-semibold">{cert.passingScore}%</div>
+                <div className="font-bold text-lg">{cert.passingScore}%</div>
               </div>
             )}
             {cert.durationMinutes && (
               <div>
                 <div className="text-muted-foreground">Exam Duration</div>
-                <div className="font-semibold">{cert.durationMinutes} minutes</div>
+                <div className="font-bold text-lg">{cert.durationMinutes} minutes</div>
               </div>
             )}
           </div>

@@ -12,6 +12,14 @@ import { RenderHero } from '@/heros/RenderHero'
 import { generateMeta } from '@/utilities/generateMeta'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { TrustBar } from '@/components/Home/TrustBar'
+import { FeaturedCertifications } from '@/components/Home/FeaturedCertifications'
+import { CallToActionBlock } from '@/blocks/CallToAction/Component'
+import { ContentBlock } from '@/blocks/Content/Component'
+import type {
+  CallToActionBlock as CTABlockProps,
+  ContentBlock as ContentBlockProps,
+} from '@/payload-types'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -65,9 +73,10 @@ export default async function Page({ params: paramsPromise }: Args) {
   }
 
   const { hero, layout } = page
+  const isHome = decodedSlug === 'home'
 
   return (
-    <article className="pt-16 pb-24">
+    <article className={isHome ? '' : 'pt-16 pb-24'}>
       <PageClient />
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
@@ -75,8 +84,50 @@ export default async function Page({ params: paramsPromise }: Args) {
       {draft && <LivePreviewListener />}
 
       <RenderHero {...hero} />
-      <RenderBlocks blocks={layout} />
+      {isHome ? <HomeLayout layout={layout} /> : <RenderBlocks blocks={layout} />}
     </article>
+  )
+}
+
+// The homepage's own layout (hero CTA, feature columns, closing CTA, blog
+// archive - see src/seed/run.ts) gets two extra sections woven in between the
+// CMS-authored blocks: a trust bar after the hero, and the live certifications
+// grid after the value props. Those two sections aren't part of the Pages
+// block system (see src/components/Home for why), so they can't be reordered
+// from admin - if the block order in "Home" is ever changed there, this falls
+// back to rendering everything in the plain block order with both sections
+// appended at the end, rather than guessing a new position.
+const HomeLayout: React.FC<{ layout: RequiredDataFromCollectionSlug<'pages'>['layout'] }> = ({
+  layout,
+}) => {
+  const blocks = layout || []
+  const [heroBlock, featuresBlock, ...rest] = blocks
+  const matchesExpectedShape =
+    heroBlock?.blockType === 'cta' && featuresBlock?.blockType === 'content'
+
+  if (!matchesExpectedShape) {
+    return (
+      <>
+        <RenderBlocks blocks={blocks} />
+        <TrustBar />
+        <FeaturedCertifications />
+      </>
+    )
+  }
+
+  return (
+    <>
+      {/* Rendered directly (not via RenderBlocks) so these two sit flush
+          against the trust bar / certifications grid instead of picking up
+          RenderBlocks' generic my-16 spacing - both already manage their own
+          vertical padding for a full-bleed hero and card-grid look. Cast is
+          safe: matchesExpectedShape above confirms these blockTypes. */}
+      <CallToActionBlock {...(heroBlock as unknown as CTABlockProps)} />
+      <TrustBar />
+      <ContentBlock {...(featuresBlock as unknown as ContentBlockProps)} />
+      <FeaturedCertifications />
+      <RenderBlocks blocks={rest} />
+    </>
   )
 }
 

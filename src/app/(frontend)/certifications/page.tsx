@@ -53,23 +53,25 @@ export default async function CertificationsPage() {
             <Link
               key={cert.id}
               href={`/certifications/${cert.slug}`}
-              className="block border rounded-lg p-6 hover:shadow-md transition-shadow no-underline"
+              className="block rounded-2xl border border-border bg-card p-7 shadow-sm hover:shadow-lg transition-shadow no-underline"
             >
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-4">
                 {cert.vendor && (
-                  <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                     {cert.vendor}
                   </span>
                 )}
                 {cert.difficulty && (
-                  <span className="text-xs uppercase tracking-wide rounded-full bg-muted px-2 py-0.5 ml-auto">
+                  <span className="text-[11px] font-bold uppercase tracking-wide rounded-full bg-accent text-accent-foreground px-3 py-1 ml-auto">
                     {cert.difficulty}
                   </span>
                 )}
               </div>
-              <h3 className="text-lg font-semibold mb-2">{cert.title}</h3>
+              <h3 className="text-lg font-bold mb-2">{cert.title}</h3>
               {cert.summary && (
-                <p className="text-sm text-muted-foreground line-clamp-3">{cert.summary}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                  {cert.summary}
+                </p>
               )}
             </Link>
           ))}
