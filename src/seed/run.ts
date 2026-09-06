@@ -422,6 +422,9 @@ export async function seedContent(payload: Payload) {
     try {
       await payload.create({
         collection: 'posts',
+        context: {
+          disableRevalidate: true,
+        },
         data: {
         title: 'How to Pass the AWS AI Practitioner Exam: A Study Guide',
         slug: postSlug,
@@ -463,6 +466,9 @@ export async function seedContent(payload: Payload) {
   try {
     await payload.updateGlobal({
       slug: 'header',
+      context: {
+        disableRevalidate: true,
+      },
       data: {
         navItems: [
           { link: { type: 'custom', url: '/certifications', label: 'Certifications', newTab: false } },
@@ -477,6 +483,9 @@ export async function seedContent(payload: Payload) {
   try {
     await payload.updateGlobal({
       slug: 'footer',
+      context: {
+        disableRevalidate: true,
+      },
       data: {
         navItems: [
           { link: { type: 'custom', url: '/certifications', label: 'Certifications', newTab: false } },
@@ -500,6 +509,9 @@ export async function seedContent(payload: Payload) {
     try {
       await payload.create({
         collection: 'pages',
+        context: {
+          disableRevalidate: true,
+        },
         data: {
           title: 'Home',
           slug: 'home',
