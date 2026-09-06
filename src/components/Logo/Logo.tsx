@@ -1,29 +1,26 @@
-import clsx from 'clsx'
 import React from 'react'
+
+import { cn } from '@/utilities/ui'
 
 interface Props {
   className?: string
-  loading?: 'lazy' | 'eager'
-  priority?: 'auto' | 'high' | 'low'
 }
 
-export const Logo = (props: Props) => {
-  const { loading: loadingFromProps, priority: priorityFromProps, className } = props
-
-  const loading = loadingFromProps || 'lazy'
-  const priority = priorityFromProps || 'low'
-
+// Text wordmark: "Cert" in the current text color (so it adapts to whatever
+// background it's placed on - inherit from a parent like the dark footer, or
+// default to --foreground on a normal page background) and "Genius" in the
+// brand's primary blue, for a bit of visual distinction without needing an
+// image asset.
+export const Logo = ({ className }: Props) => {
   return (
-    /* eslint-disable @next/next/no-img-element */
-    <img
-      alt="Payload Logo"
-      width={193}
-      height={34}
-      loading={loading}
-      fetchPriority={priority}
-      decoding="async"
-      className={clsx('max-w-[9.375rem] w-full h-[34px]', className)}
-      src="https://raw.githubusercontent.com/payloadcms/payload/3.x/packages/ui/src/assets/payload-logo-light.svg"
-    />
+    <span
+      className={cn(
+        'inline-flex items-baseline text-xl font-bold tracking-tight leading-none text-foreground',
+        className,
+      )}
+    >
+      Cert
+      <span className="text-primary">Genius</span>
+    </span>
   )
 }

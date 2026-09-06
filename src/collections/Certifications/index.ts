@@ -21,6 +21,12 @@ export const Certifications: CollectionConfig = {
     update: authenticated,
   },
   admin: {
+    components: {
+      edit: {
+        // Shows a "this is 3+ months old" reminder right on the edit screen.
+        beforeDocumentControls: ['@/components/StaleDocumentNotice'],
+      },
+    },
     useAsTitle: 'title',
     defaultColumns: ['title', 'vendor', 'category', 'difficulty', 'updatedAt'],
     group: 'Certification Content',
@@ -88,7 +94,8 @@ export const Certifications: CollectionConfig = {
       type: 'richText',
       label: 'Full Overview',
       admin: {
-        description: 'The main description shown on the certification page - who it is for, what it covers, exam format, etc.',
+        description:
+          'The main description shown on the certification page - who it is for, what it covers, exam format, etc.',
       },
     },
     {
@@ -109,7 +116,8 @@ export const Certifications: CollectionConfig = {
       name: 'affiliateLink',
       type: 'text',
       admin: {
-        description: 'Optional link to an official training course, book, or exam registration (used for affiliate/monetization links).',
+        description:
+          'Optional link to an official training course, book, or exam registration (used for affiliate/monetization links).',
       },
     },
     {

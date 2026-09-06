@@ -77,7 +77,7 @@ export const PracticeTest: React.FC<Props> = ({ certTitle, questions }) => {
         <div className="flex justify-center gap-4">
           <button
             onClick={restart}
-            className="inline-flex items-center rounded-md bg-black text-white dark:bg-white dark:text-black px-5 py-3 font-medium"
+            className="inline-flex items-center rounded-md bg-primary text-primary-foreground hover:opacity-90 px-5 py-3 font-medium"
           >
             Retake Test
           </button>
@@ -105,7 +105,7 @@ export const PracticeTest: React.FC<Props> = ({ certTitle, questions }) => {
 
       <div className="w-full h-1.5 bg-muted rounded-full mb-8 overflow-hidden">
         <div
-          className="h-full bg-black dark:bg-white transition-all"
+          className="h-full bg-primary transition-all"
           style={{ width: `${((current + 1) / questions.length) * 100}%` }}
         />
       </div>
@@ -151,7 +151,7 @@ export const PracticeTest: React.FC<Props> = ({ certTitle, questions }) => {
         {selected !== null && (
           <button
             onClick={goNext}
-            className="inline-flex items-center rounded-md bg-black text-white dark:bg-white dark:text-black px-5 py-3 font-medium"
+            className="inline-flex items-center rounded-md bg-primary text-primary-foreground hover:opacity-90 px-5 py-3 font-medium"
           >
             {current + 1 >= questions.length ? 'See Results' : 'Next Question'}
           </button>

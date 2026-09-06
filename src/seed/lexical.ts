@@ -20,7 +20,7 @@ type LexicalParagraph = {
 
 type LexicalHeading = {
   type: 'heading'
-  tag: 'h2' | 'h3'
+  tag: 'h1' | 'h2' | 'h3'
   children: LexicalParagraph['children']
   direction: 'ltr'
   format: ''
@@ -47,7 +47,7 @@ export const paragraph = (text: string): LexicalParagraph => ({
   version: 1,
 })
 
-export const heading = (text: string, tag: 'h2' | 'h3' = 'h2'): LexicalHeading => ({
+export const heading = (text: string, tag: 'h1' | 'h2' | 'h3' = 'h2'): LexicalHeading => ({
   type: 'heading',
   tag,
   children: [textNode(text)],

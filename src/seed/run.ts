@@ -7,6 +7,7 @@
  * - five practice questions for each
  * - one sample blog post
  * - header/footer navigation links
+ * - a real homepage (replaces the default "Payload Website Template" page)
  *
  * This runs automatically as part of every production build (see
  * src/scripts/ensure-db-schema.ts), so new certifications you add here go
@@ -487,6 +488,118 @@ export async function seedContent(payload: Payload) {
     payload.logger.info('Footer nav saved (harmless revalidate warning above).')
   }
   payload.logger.info('Navigation updated.')
+
+  // 7. Homepage - replaces the default "Payload Website Template" placeholder
+  // that shows until a real Page with slug "home" exists.
+  const existingHome = await payload.find({
+    collection: 'pages',
+    where: { slug: { equals: 'home' } },
+    limit: 1,
+  })
+  if (!existingHome.docs[0]) {
+    try {
+      await payload.create({
+        collection: 'pages',
+        data: {
+          title: 'Home',
+          slug: 'home',
+          _status: 'published',
+          hero: {
+            type: 'mediumImpact',
+            richText: richText([
+              heading('Pass Your Certification Exam With Confidence', 'h1'),
+              paragraph(
+                'CertGenius gives you exam-accurate practice questions and clear, up-to-date study guides for the certifications that matter most in AI, cloud, and IT today.',
+              ),
+            ]),
+            links: [
+              {
+                link: {
+                  type: 'custom',
+                  url: '/certifications',
+                  label: 'Browse Certifications',
+                  appearance: 'default',
+                },
+              },
+              {
+                link: {
+                  type: 'custom',
+                  url: '/posts',
+                  label: 'Read the Blog',
+                  appearance: 'outline',
+                },
+              },
+            ],
+          },
+          layout: [
+            {
+              blockType: 'content',
+              columns: [
+                {
+                  size: 'oneThird',
+                  richText: richText([
+                    heading('Real Exam-Style Practice', 'h3'),
+                    paragraph(
+                      'Practice questions modeled on the actual exam format, with explanations for every answer, so nothing on test day catches you off guard.',
+                    ),
+                  ]),
+                },
+                {
+                  size: 'oneThird',
+                  richText: richText([
+                    heading('Focused On What Matters', 'h3'),
+                    paragraph(
+                      'We cover the certifications with real career demand right now, starting with AI and cloud.',
+                    ),
+                  ]),
+                },
+                {
+                  size: 'oneThird',
+                  richText: richText([
+                    heading('Kept Current', 'h3'),
+                    paragraph(
+                      'Every certification guide is reviewed on a regular schedule so the content keeps up with each exam.',
+                    ),
+                  ]),
+                },
+              ],
+            },
+            {
+              blockType: 'cta',
+              richText: richText([
+                heading('Ready to Start Studying?'),
+                paragraph('Pick a certification and start your free practice test today.'),
+              ]),
+              links: [
+                {
+                  link: {
+                    type: 'custom',
+                    url: '/certifications',
+                    label: 'View All Certifications',
+                    appearance: 'default',
+                  },
+                },
+              ],
+            },
+            {
+              blockType: 'archive',
+              introContent: richText([heading('From the Blog')]),
+              populateBy: 'collection',
+              relationTo: 'posts',
+              limit: 3,
+            },
+          ],
+        },
+      })
+    } catch (err) {
+      // Revalidation errors are expected when seeding without a live Next.js server -
+      // the page is still saved. See the sample blog post above for the same pattern.
+      payload.logger.info(
+        'Homepage saved (a harmless revalidate warning may appear above when seeding without a running server).',
+      )
+    }
+  }
+  payload.logger.info('Homepage ready.')
 
   payload.logger.info('Seeding complete!')
 }

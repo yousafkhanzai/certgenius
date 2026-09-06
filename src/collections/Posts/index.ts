@@ -48,6 +48,12 @@ export const Posts: CollectionConfig<'posts'> = {
     },
   },
   admin: {
+    components: {
+      edit: {
+        // Shows a "this is 3+ months old" reminder right on the edit screen.
+        beforeDocumentControls: ['@/components/StaleDocumentNotice'],
+      },
+    },
     defaultColumns: ['title', 'slug', 'updatedAt'],
     livePreview: {
       url: ({ data, req }) =>
