@@ -14,12 +14,14 @@ import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { TrustBar } from '@/components/Home/TrustBar'
 import { FeaturedCertifications } from '@/components/Home/FeaturedCertifications'
+import { NewsletterCTA } from '@/components/Home/NewsletterCTA'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import type {
   CallToActionBlock as CTABlockProps,
   ContentBlock as ContentBlockProps,
 } from '@/payload-types'
+import type { FormBlockType } from '@/blocks/Form/Component'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -89,7 +91,7 @@ export default async function Page({ params: paramsPromise }: Args) {
   )
 }
 
-// The homepage's own layout (hero CTA, feature columns, closing CTA, blog
+// The homepage's own layout (hero CTA, feature columns, newsletter CTA, blog
 // archive - see src/seed/run.ts) gets two extra sections woven in between the
 // CMS-authored blocks: a trust bar after the hero, and the live certifications
 // grid after the value props. Those two sections aren't part of the Pages
@@ -101,9 +103,11 @@ const HomeLayout: React.FC<{ layout: RequiredDataFromCollectionSlug<'pages'>['la
   layout,
 }) => {
   const blocks = layout || []
-  const [heroBlock, featuresBlock, ...rest] = blocks
+  const [heroBlock, featuresBlock, newsletterBlock, ...rest] = blocks
   const matchesExpectedShape =
-    heroBlock?.blockType === 'cta' && featuresBlock?.blockType === 'content'
+    heroBlock?.blockType === 'cta' &&
+    featuresBlock?.blockType === 'content' &&
+    newsletterBlock?.blockType === 'formBlock'
 
   if (!matchesExpectedShape) {
     return (
@@ -117,15 +121,19 @@ const HomeLayout: React.FC<{ layout: RequiredDataFromCollectionSlug<'pages'>['la
 
   return (
     <>
-      {/* Rendered directly (not via RenderBlocks) so these two sit flush
-          against the trust bar / certifications grid instead of picking up
-          RenderBlocks' generic my-16 spacing - both already manage their own
-          vertical padding for a full-bleed hero and card-grid look. Cast is
-          safe: matchesExpectedShape above confirms these blockTypes. */}
+      {/* Rendered directly (not via RenderBlocks) so these sit flush against
+          the trust bar / certifications grid instead of picking up
+          RenderBlocks' generic my-16 spacing - each already manages its own
+          vertical padding for a full-bleed hero, card grid, and gradient
+          band. Casts are safe: matchesExpectedShape above confirms these
+          blockTypes. */}
       <CallToActionBlock {...(heroBlock as unknown as CTABlockProps)} />
       <TrustBar />
       <ContentBlock {...(featuresBlock as unknown as ContentBlockProps)} />
       <FeaturedCertifications />
+      <div className="my-16">
+        <NewsletterCTA {...(newsletterBlock as unknown as FormBlockType)} />
+      </div>
       <RenderBlocks blocks={rest} />
     </>
   )

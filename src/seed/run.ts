@@ -498,6 +498,53 @@ export async function seedContent(payload: Payload) {
   }
   payload.logger.info('Navigation updated.')
 
+  // 6.5. Newsletter signup form - emails land in the "Form Submissions"
+  // section of the admin dashboard (Payload's form-builder plugin, already
+  // installed). No third-party email tool involved.
+  const existingNewsletterForm = await payload.find({
+    collection: 'forms',
+    where: { title: { equals: 'Newsletter Signup' } },
+    limit: 1,
+  })
+  const newsletterForm =
+    existingNewsletterForm.docs[0] ||
+    (await payload.create({
+      collection: 'forms',
+      data: {
+        title: 'Newsletter Signup',
+        submitButtonLabel: 'Notify Me',
+        confirmationType: 'message',
+        confirmationMessage: richText([
+          paragraph("Thanks - we'll email you when new certifications and study guides go live."),
+        ]),
+        fields: [
+          {
+            blockType: 'email',
+            name: 'email',
+            label: 'Email address',
+            required: true,
+            width: 100,
+          },
+        ],
+      },
+    }))
+  payload.logger.info('Newsletter signup form ready.')
+
+  // The homepage's closing section: a heading/paragraph (editable from the
+  // "Home" page in admin, same as any other block) plus the newsletter form
+  // above instead of a plain "View All Certifications" button.
+  const newsletterHomeBlock = {
+    blockType: 'formBlock' as const,
+    enableIntro: true,
+    introContent: richText([
+      heading('Ready to Start Studying?'),
+      paragraph(
+        "Pick a certification and start your free practice test today, or leave your email and we'll let you know when new ones go live.",
+      ),
+    ]),
+    form: newsletterForm.id,
+  }
+
   // 7. Homepage - replaces the default "Payload Website Template" placeholder
   // that shows until a real Page with slug "home" exists.
   const existingHome = await payload.find({
@@ -584,23 +631,7 @@ export async function seedContent(payload: Payload) {
                 },
               ],
             },
-            {
-              blockType: 'cta',
-              richText: richText([
-                heading('Ready to Start Studying?'),
-                paragraph('Pick a certification and start your free practice test today.'),
-              ]),
-              links: [
-                {
-                  link: {
-                    type: 'custom',
-                    url: '/certifications',
-                    label: 'View All Certifications',
-                    appearance: 'default',
-                  },
-                },
-              ],
-            },
+            newsletterHomeBlock,
             {
               blockType: 'archive',
               introContent: richText([heading('From the Blog')]),
@@ -619,6 +650,34 @@ export async function seedContent(payload: Payload) {
         'Homepage save finished with a warning (often just a harmless revalidate warning when seeding without a running server) - details below.',
       )
       payload.logger.error(err instanceof Error ? err.message : String(err))
+    }
+  } else {
+    // Homepage already exists from an earlier deploy (before the newsletter
+    // form existed) - swap just its closing "cta" block for the newsletter
+    // form block in place, leaving the hero/features/blog blocks and any
+    // other admin edits untouched.
+    const existingLayout = existingHome.docs[0].layout || []
+    if (existingLayout[2]?.blockType !== 'formBlock') {
+      try {
+        const newLayout = [...existingLayout]
+        newLayout[2] = newsletterHomeBlock
+        await payload.update({
+          collection: 'pages',
+          id: existingHome.docs[0].id,
+          context: {
+            disableRevalidate: true,
+          },
+          data: {
+            layout: newLayout,
+          },
+        })
+        payload.logger.info('Homepage closing section upgraded to the newsletter form.')
+      } catch (err) {
+        payload.logger.info(
+          'Homepage newsletter update finished with a warning (often just a harmless revalidate warning when seeding without a running server) - details below.',
+        )
+        payload.logger.error(err instanceof Error ? err.message : String(err))
+      }
     }
   }
   payload.logger.info('Homepage ready.')
