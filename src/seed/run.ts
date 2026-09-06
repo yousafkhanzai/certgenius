@@ -504,34 +504,42 @@ export async function seedContent(payload: Payload) {
           title: 'Home',
           slug: 'home',
           _status: 'published',
+          // The image-based hero types (highImpact/mediumImpact) require an
+          // uploaded media image - we don't have a hero photo yet, so we skip
+          // the hero entirely and lead with a CallToAction block instead,
+          // which gives the same "headline + buttons" effect without needing
+          // an image.
           hero: {
-            type: 'mediumImpact',
-            richText: richText([
-              heading('Pass Your Certification Exam With Confidence', 'h1'),
-              paragraph(
-                'CertGenius gives you exam-accurate practice questions and clear, up-to-date study guides for the certifications that matter most in AI, cloud, and IT today.',
-              ),
-            ]),
-            links: [
-              {
-                link: {
-                  type: 'custom',
-                  url: '/certifications',
-                  label: 'Browse Certifications',
-                  appearance: 'default',
-                },
-              },
-              {
-                link: {
-                  type: 'custom',
-                  url: '/posts',
-                  label: 'Read the Blog',
-                  appearance: 'outline',
-                },
-              },
-            ],
+            type: 'none',
           },
           layout: [
+            {
+              blockType: 'cta',
+              richText: richText([
+                heading('Pass Your Certification Exam With Confidence', 'h1'),
+                paragraph(
+                  'CertGenius gives you exam-accurate practice questions and clear, up-to-date study guides for the certifications that matter most in AI, cloud, and IT today.',
+                ),
+              ]),
+              links: [
+                {
+                  link: {
+                    type: 'custom',
+                    url: '/certifications',
+                    label: 'Browse Certifications',
+                    appearance: 'default',
+                  },
+                },
+                {
+                  link: {
+                    type: 'custom',
+                    url: '/posts',
+                    label: 'Read the Blog',
+                    appearance: 'outline',
+                  },
+                },
+              ],
+            },
             {
               blockType: 'content',
               columns: [
@@ -593,10 +601,12 @@ export async function seedContent(payload: Payload) {
       })
     } catch (err) {
       // Revalidation errors are expected when seeding without a live Next.js server -
-      // the page is still saved. See the sample blog post above for the same pattern.
+      // the page is still saved in that case. But log the real error too (instead of
+      // assuming it's harmless) so an actual validation failure isn't seeded silently.
       payload.logger.info(
-        'Homepage saved (a harmless revalidate warning may appear above when seeding without a running server).',
+        'Homepage save finished with a warning (often just a harmless revalidate warning when seeding without a running server) - details below.',
       )
+      payload.logger.error(err instanceof Error ? err.message : String(err))
     }
   }
   payload.logger.info('Homepage ready.')
