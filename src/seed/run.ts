@@ -9,11 +9,7 @@
  * - header/footer navigation links
  * - a real homepage (replaces the default "Payload Website Template" page)
  *
- * This runs automatically as part of every production build (see
- * src/scripts/ensure-db-schema.ts), so new certifications you add here go
- * live the moment you push - no manual script running required.
- *
- * Can also be run by hand locally with: npm run seed
+ * Run by hand with: npm run seed (it no longer runs on every build).
  * Safe to run more than once - it skips anything that already exists, so
  * adding one new certification to the arrays below and pushing is all it
  * takes to publish it without touching anything already live.
@@ -25,25 +21,34 @@ import { pathToFileURL } from 'url'
 import config from '../payload.config'
 import { paragraph, heading, richText } from './lexical'
 
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@certgenius.local'
-const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!'
+// No default credentials: this repo is public, so a fallback password here
+// would be a working login for anyone who reads the code.
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD
 
 export async function seedContent(payload: Payload) {
   payload.logger.info('Seeding sample content...')
 
-  // 1. Admin user
+  // 1. Admin user - reuse the first existing user; only create one when the
+  // database has none and both SEED_ADMIN_* variables are set.
   const existingUsers = await payload.find({
     collection: 'users',
-    where: { email: { equals: ADMIN_EMAIL } },
+    sort: 'createdAt',
     limit: 1,
   })
-  const adminUser =
-    existingUsers.docs[0] ||
-    (await payload.create({
+  let adminUser = existingUsers.docs[0]
+  if (!adminUser) {
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_PASSWORD.length < 12) {
+      throw new Error(
+        'No users exist yet. Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD (12+ characters) to create the first admin.',
+      )
+    }
+    adminUser = await payload.create({
       collection: 'users',
       data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: 'Admin' },
-    }))
-  payload.logger.info(`Admin user ready: ${ADMIN_EMAIL}`)
+    })
+  }
+  payload.logger.info(`Admin user ready: ${adminUser.email}`)
 
   // 2. Categories
   const categoryNames = ['AI & Machine Learning', 'Cloud Certifications']
@@ -685,9 +690,7 @@ export async function seedContent(payload: Payload) {
   payload.logger.info('Seeding complete!')
 }
 
-// CLI entry point for running this by hand locally with `npm run seed`.
-// In production, seedContent() above is called directly from
-// src/scripts/ensure-db-schema.ts as part of every build instead.
+// CLI entry point for running this by hand with `npm run seed`.
 async function run() {
   const payload = await getPayload({ config })
   await seedContent(payload)

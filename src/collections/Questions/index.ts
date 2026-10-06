@@ -1,7 +1,14 @@
 import type { CollectionConfig } from 'payload'
 
+import type { FieldAccess } from 'payload'
+
 import { anyone } from '../../access/anyone'
 import { authenticated } from '../../access/authenticated'
+
+// Answer keys are hidden from the public REST/GraphQL API so the question
+// bank can't be scraped with its answers. Server-rendered pages read them
+// with overrideAccess instead.
+const adminOnlyRead: FieldAccess = ({ req: { user } }) => Boolean(user)
 
 // One row here = one practice question. Each question belongs to a
 // Certification, has 2-6 answer choices, and you mark which one is correct.
@@ -60,12 +67,14 @@ export const Questions: CollectionConfig = {
           type: 'checkbox',
           defaultValue: false,
           label: 'Correct answer',
+          access: { read: adminOnlyRead },
         },
       ],
     },
     {
       name: 'explanation',
       type: 'textarea',
+      access: { read: adminOnlyRead },
       admin: {
         description: 'Shown after the user answers - why the correct answer is correct.',
       },

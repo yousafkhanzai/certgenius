@@ -18,23 +18,19 @@
 // that runs right after this still builds in real production mode.
 ;(process.env as Record<string, string>).NODE_ENV = 'development'
 
+import 'dotenv/config'
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
-import { seedContent } from '../seed/run'
 
 async function run() {
   console.log('Ensuring database schema is up to date...')
-  const payload = await getPayload({ config })
+  await getPayload({ config })
   console.log('Database schema is ready.')
 
-  // Publish/update launch content on every build. This is safe to run
-  // repeatedly - it looks up each certification, question, and page by its
-  // slug/text first and only creates what's missing, so it never duplicates
-  // or overwrites anything already published from the admin dashboard.
-  console.log('Publishing launch content...')
-  await seedContent(payload)
-  console.log('Launch content is ready.')
+  // Launch content (src/seed/run.ts) no longer runs on every build: it created
+  // an admin account with a default password and rewrote homepage blocks on
+  // each deploy. Run it by hand with `npm run seed` when it's actually needed.
 
   process.exit(0)
 }

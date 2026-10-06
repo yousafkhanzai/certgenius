@@ -33,7 +33,9 @@ export default async function PracticeTestPage({ params: paramsPromise }: Args) 
     collection: 'questions',
     depth: 0,
     limit: 200,
-    overrideAccess: false,
+    // Answer keys are admin-only in the public API; this page renders on the
+    // server for a published certification, so it may read them.
+    overrideAccess: true,
     where: { certification: { equals: cert.id } },
   })
 
