@@ -28,7 +28,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     return new Response('Insufficient search params', { status: 404 })
   }
 
-  if (!path.startsWith('/')) {
+  // "//host" and "/\host" are protocol-relative URLs that browsers treat as
+  // another website, which would make this an open redirect.
+  if (!path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) {
     return new Response('This endpoint can only be used for relative previews', { status: 500 })
   }
 
@@ -47,12 +49,11 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const draft = await draftMode()
 
-  if (!user) {
+  // Only admins may see unpublished drafts - not students.
+  if (!user || user.collection !== 'users') {
     draft.disable()
     return new Response('You are not allowed to preview this page', { status: 403 })
   }
-
-  // You can add additional checks here to see if the user is allowed to preview this page
 
   draft.enable()
 

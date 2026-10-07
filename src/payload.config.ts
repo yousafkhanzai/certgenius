@@ -11,6 +11,14 @@ import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Questions } from './collections/Questions'
 import { Users } from './collections/Users'
+import { Students } from './collections/Students'
+import {
+  AnswerStats,
+  AttemptAnswers,
+  Attempts,
+  Bookmarks,
+  ProblemReports,
+} from './collections/StudentActivity'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -19,6 +27,21 @@ import { getServerSideURL } from './utilities/getURL'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// Every address this site is served from: the configured URL, Vercel's
+// production/preview hostnames, and localhost while developing.
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      getServerSideURL(),
+      'https://certgenius.vercel.app',
+      process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`,
+      process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
+      process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+      process.env.NODE_ENV !== 'production' && 'http://localhost:3000',
+    ].filter((origin): origin is string => Boolean(origin)),
+  ),
+)
 
 export default buildConfig({
   admin: {
@@ -31,6 +54,15 @@ export default buildConfig({
       // `StaleContentBanner` lists Blog Posts, Pages, and Certifications that
       // haven't been updated in 3+ months, right below it.
       beforeDashboard: ['@/components/BeforeDashboard', '@/components/StaleContentBanner'],
+      afterNavLinks: ['@/components/Importer/NavLink'],
+      views: {
+        // /admin/import - spreadsheet importer for questions and certifications.
+        importer: {
+          Component: '@/components/Importer',
+          path: '/import',
+          meta: { title: 'Import spreadsheets' },
+        },
+      },
     },
     importMap: {
       baseDir: path.resolve(dirname),
@@ -72,8 +104,25 @@ export default buildConfig({
     // deploy instead of failing with "relation does not exist."
     push: true,
   }),
-  collections: [Pages, Posts, Certifications, Questions, Media, Categories, Users],
-  cors: [getServerSideURL()].filter(Boolean),
+  collections: [
+    Pages,
+    Posts,
+    Certifications,
+    Questions,
+    Media,
+    Categories,
+    Users,
+    Students,
+    Attempts,
+    AttemptAnswers,
+    Bookmarks,
+    AnswerStats,
+    ProblemReports,
+  ],
+  cors: trustedOrigins,
+  // Login cookies are only honoured on requests coming from our own site, so
+  // another website can't make a visitor's browser act on their account.
+  csrf: trustedOrigins,
   globals: [Header, Footer],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
@@ -84,8 +133,8 @@ export default buildConfig({
   jobs: {
     access: {
       run: ({ req }: { req: PayloadRequest }): boolean => {
-        // Allow logged in users to execute this endpoint (default)
-        if (req.user) return true
+        // Allow logged in admins to execute this endpoint (not students)
+        if (req.user?.collection === 'users') return true
 
         const secret = process.env.CRON_SECRET
         if (!secret) return false

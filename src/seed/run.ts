@@ -401,15 +401,21 @@ export async function seedContent(payload: Payload) {
       limit: 1,
     })
     if (!existing.docs[0]) {
+      const [a, b, c, d] = q.options
       await payload.create({
         collection: 'questions',
         data: {
           certification: certId,
           questionText: q.questionText,
-          options: q.options,
+          optionA: a.text,
+          optionB: b.text,
+          optionC: c.text,
+          optionD: d.text,
+          correctAnswer: (['A', 'B', 'C', 'D'] as const)[q.options.findIndex((o) => o.isCorrect)],
           explanation: q.explanation,
-          topic: q.topic,
-          difficulty: 'beginner',
+          domainName: q.topic,
+          level: 'easy',
+          questionType: 'single',
         },
       })
     }

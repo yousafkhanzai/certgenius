@@ -22,11 +22,15 @@ import 'dotenv/config'
 import { getPayload } from 'payload'
 
 import config from '../payload.config'
+import { upgradeContent } from './upgrade-content'
 
 async function run() {
   console.log('Ensuring database schema is up to date...')
-  await getPayload({ config })
+  const payload = await getPayload({ config })
   console.log('Database schema is ready.')
+
+  // Idempotent: only converts rows still in the pre-Phase-1 format.
+  await upgradeContent(payload)
 
   // Launch content (src/seed/run.ts) no longer runs on every build: it created
   // an admin account with a default password and rewrote homepage blocks on

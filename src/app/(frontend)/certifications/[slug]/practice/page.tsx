@@ -39,12 +39,18 @@ export default async function PracticeTestPage({ params: paramsPromise }: Args) 
     where: { certification: { equals: cert.id } },
   })
 
-  const questions = questionsResult.docs.map((q) => ({
-    id: String(q.id),
-    questionText: q.questionText,
-    explanation: q.explanation || undefined,
-    options: (q.options || []).map((o) => ({ text: o.text, isCorrect: Boolean(o.isCorrect) })),
-  }))
+  const letters = ['A', 'B', 'C', 'D'] as const
+  const questions = questionsResult.docs
+    .filter((q) => q.optionA && q.correctAnswer)
+    .map((q) => ({
+      id: String(q.id),
+      questionText: q.questionText,
+      explanation: q.explanation || undefined,
+      options: letters.map((letter) => ({
+        text: q[`option${letter}`] || '',
+        isCorrect: q.correctAnswer === letter,
+      })),
+    }))
 
   return (
     <div className="pt-16 pb-24">

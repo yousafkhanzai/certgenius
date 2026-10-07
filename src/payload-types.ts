@@ -64,6 +64,7 @@ export type SupportedTimezones =
 export interface Config {
   auth: {
     users: UserAuthOperations;
+    students: StudentAuthOperations;
   };
   blocks: {};
   collections: {
@@ -74,6 +75,12 @@ export interface Config {
     media: Media;
     categories: Category;
     users: User;
+    students: Student;
+    attempts: Attempt;
+    'attempt-answers': AttemptAnswer;
+    bookmarks: Bookmark;
+    'answer-stats': AnswerStat;
+    'problem-reports': ProblemReport;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -98,6 +105,12 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    students: StudentsSelect<false> | StudentsSelect<true>;
+    attempts: AttemptsSelect<false> | AttemptsSelect<true>;
+    'attempt-answers': AttemptAnswersSelect<false> | AttemptAnswersSelect<true>;
+    bookmarks: BookmarksSelect<false> | BookmarksSelect<true>;
+    'answer-stats': AnswerStatsSelect<false> | AnswerStatsSelect<true>;
+    'problem-reports': ProblemReportsSelect<false> | ProblemReportsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -125,7 +138,7 @@ export interface Config {
   widgets: {
     collections: CollectionsWidget;
   };
-  user: User;
+  user: User | Student;
   jobs: {
     tasks: {
       schedulePublish: TaskSchedulePublish;
@@ -138,6 +151,24 @@ export interface Config {
   };
 }
 export interface UserAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
+export interface StudentAuthOperations {
   forgotPassword: {
     email: string;
     password: string;
@@ -431,6 +462,7 @@ export interface User {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -792,23 +824,71 @@ export interface Certification {
   generateSlug?: boolean | null;
   slug: string;
   /**
-   * Who issues this certification, e.g. "AWS", "Microsoft", "CompTIA"
+   * Retired and On hold certifications are hidden from listings.
+   */
+  examStatus?: ('active' | 'updated' | 'new' | 'retired' | 'on-hold' | 'course-certificate') | null;
+  /**
+   * For retired exams: the certification that replaces it.
+   */
+  replacedBy?: (number | null) | Certification;
+  certCategory?:
+    | (
+        | 'cloud-ai'
+        | 'ai-vendor'
+        | 'ai-security-governance'
+        | 'blockchain'
+        | 'cloud-general'
+        | 'cybersecurity'
+        | 'data-engineering-analytics'
+        | 'devops-sre'
+        | 'networking-it-support'
+        | 'project-management'
+        | 'agile-scrum'
+        | 'finance-legal'
+        | 'healthcare'
+        | 'backend-development'
+        | 'frontend-development'
+        | 'full-stack'
+        | 'ui-ux-design'
+        | 'mobile-development'
+        | 'game-development'
+        | 'enterprise-platforms'
+      )
+    | null;
+  publishedAt?: string | null;
+  /**
+   * Who issues this certification, e.g. "AWS", "Blockchain Council"
    */
   vendor?: string | null;
   /**
-   * Official exam code, e.g. "AIF-C01" (optional)
+   * e.g. "AIF-C01". Use our own code (e.g. "BC-CED") if the vendor has none.
    */
   examCode?: string | null;
-  category?: (number | Category)[] | null;
-  difficulty?: ('beginner' | 'intermediate' | 'advanced') | null;
-  heroImage?: (number | null) | Media;
+  isSiteCode?: boolean | null;
+  passingScore?: number | null;
+  examQuestionCount?: number | null;
+  durationMinutes?: number | null;
+  /**
+   * e.g. "Online proctored or test centre"
+   */
+  delivery?: string | null;
+  officialUrl?: string | null;
   /**
    * Short 1-2 sentence summary shown on listing cards.
    */
   summary?: string | null;
+  heroImage?: (number | null) | Media;
   /**
-   * The main description shown on the certification page - who it is for, what it covers, exam format, etc.
+   * Exam domains. Imported questions must use one of these names exactly.
    */
+  domains?:
+    | {
+        name: string;
+        weight?: number | null;
+        studyGuide?: (number | null) | Post;
+        id?: string | null;
+      }[]
+    | null;
   overview?: {
     root: {
       type: string;
@@ -824,19 +904,77 @@ export interface Certification {
     };
     [k: string]: unknown;
   } | null;
+  whoItsFor?: string | null;
+  background?: string | null;
+  roles?:
+    | {
+        role: string;
+        id?: string | null;
+      }[]
+    | null;
+  authorName?: string | null;
+  authorRole?: string | null;
+  reviewerName?: string | null;
+  reviewerCredential?: string | null;
+  studyPlan?:
+    | {
+        /**
+         * e.g. "Week 1"
+         */
+        label?: string | null;
+        title?: string | null;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
-   * Passing score percentage, e.g. 70 (optional)
+   * Rows of the "How it compares" table, e.g. Level / Foundational / Associate.
    */
-  passingScore?: number | null;
+  comparisonRows?:
+    | {
+        label: string;
+        thisExam?: string | null;
+        otherExam?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
-   * Real exam time limit in minutes (optional)
+   * Name of the exam in the "Compared exam" column.
    */
-  durationMinutes?: number | null;
+  comparedExamName?: string | null;
+  officialResources?:
+    | {
+        name: string;
+        description?: string | null;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
-   * Optional link to an official training course, book, or exam registration (used for affiliate/monetization links).
+   * Shown with rel="sponsored nofollow" and an affiliate disclosure.
    */
+  affiliateCourses?:
+    | {
+        type: 'video-course' | 'hands-on-labs' | 'official-training';
+        partner?: string | null;
+        title: string;
+        url: string;
+        bulletOne?: string | null;
+        bulletTwo?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  relatedCertifications?: (number | Certification)[] | null;
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  category?: (number | Category)[] | null;
+  difficulty?: ('beginner' | 'intermediate' | 'advanced') | null;
   affiliateLink?: string | null;
-  publishedAt?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -851,24 +989,189 @@ export interface Question {
    * Which certification is this question for?
    */
   certification: number | Certification;
-  questionText: string;
   /**
-   * Add each possible answer, and tick "Correct answer" on the right one(s).
+   * Must exactly match one of the certification's domain names.
    */
-  options: {
-    text: string;
-    isCorrect?: boolean | null;
-    id?: string | null;
-  }[];
+  domainName?: string | null;
+  questionText: string;
+  optionA?: string | null;
+  optionB?: string | null;
+  optionC?: string | null;
+  optionD?: string | null;
+  correctAnswer?: ('A' | 'B' | 'C' | 'D') | null;
   /**
-   * Shown after the user answers - why the correct answer is correct.
+   * Shown after the student answers - why the correct answer is correct.
    */
   explanation?: string | null;
-  /**
-   * Exam domain/topic this question covers, e.g. "Networking" (optional)
-   */
+  whyA?: string | null;
+  whyB?: string | null;
+  whyC?: string | null;
+  whyD?: string | null;
+  hint?: string | null;
+  blogPostUrl?: string | null;
+  referenceUrl?: string | null;
+  level?: ('easy' | 'medium' | 'hard') | null;
+  questionType?: 'single' | null;
+  contentHash?: string | null;
+  options?:
+    | {
+        text?: string | null;
+        isCorrect?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   topic?: string | null;
   difficulty?: ('beginner' | 'intermediate' | 'advanced') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "students".
+ */
+export interface Student {
+  id: number;
+  name?: string | null;
+  dailyGoal?: number | null;
+  currentStreak?: number | null;
+  longestStreak?: number | null;
+  lastActiveDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'students';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attempts".
+ */
+export interface Attempt {
+  id: number;
+  student: number | Student;
+  certification: number | Certification;
+  mode: 'practice' | 'exam';
+  status?: ('in-progress' | 'submitted' | 'abandoned') | null;
+  /**
+   * Practice: the chosen domain, if any.
+   */
+  domainFilter?: string | null;
+  /**
+   * Question IDs in the order shown.
+   */
+  questionIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Saved answers, cross-outs and bookmarks so a refresh can resume.
+   */
+  responses?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  currentIndex?: number | null;
+  startedAt: string;
+  /**
+   * Exam simulation: when time runs out.
+   */
+  deadline?: string | null;
+  submittedAt?: string | null;
+  timeUsedSeconds?: number | null;
+  totalQuestions?: number | null;
+  correctCount?: number | null;
+  scorePercent?: number | null;
+  passed?: boolean | null;
+  domainResults?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attempt-answers".
+ */
+export interface AttemptAnswer {
+  id: number;
+  attempt?: (number | null) | Attempt;
+  student: number | Student;
+  question: number | Question;
+  certification?: (number | null) | Certification;
+  domainName?: string | null;
+  chosen?: ('A' | 'B' | 'C' | 'D') | null;
+  isCorrect?: boolean | null;
+  answeredAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookmarks".
+ */
+export interface Bookmark {
+  id: number;
+  student: number | Student;
+  question: number | Question;
+  certification?: (number | null) | Certification;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-stats".
+ */
+export interface AnswerStat {
+  id: number;
+  question: number | Question;
+  countA?: number | null;
+  countB?: number | null;
+  countC?: number | null;
+  countD?: number | null;
+  total?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "problem-reports".
+ */
+export interface ProblemReport {
+  id: number;
+  question: number | Question;
+  student?: (number | null) | Student;
+  message: string;
+  status?: ('open' | 'reviewing' | 'fixed' | 'rejected') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1091,6 +1394,30 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'students';
+        value: number | Student;
+      } | null)
+    | ({
+        relationTo: 'attempts';
+        value: number | Attempt;
+      } | null)
+    | ({
+        relationTo: 'attempt-answers';
+        value: number | AttemptAnswer;
+      } | null)
+    | ({
+        relationTo: 'bookmarks';
+        value: number | Bookmark;
+      } | null)
+    | ({
+        relationTo: 'answer-stats';
+        value: number | AnswerStat;
+      } | null)
+    | ({
+        relationTo: 'problem-reports';
+        value: number | ProblemReport;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: number | Redirect;
       } | null)
@@ -1111,10 +1438,15 @@ export interface PayloadLockedDocument {
         value: number | FolderInterface;
       } | null);
   globalSlug?: string | null;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'students';
+        value: number | Student;
+      };
   updatedAt: string;
   createdAt: string;
 }
@@ -1124,10 +1456,15 @@ export interface PayloadLockedDocument {
  */
 export interface PayloadPreference {
   id: number;
-  user: {
-    relationTo: 'users';
-    value: number | User;
-  };
+  user:
+    | {
+        relationTo: 'users';
+        value: number | User;
+      }
+    | {
+        relationTo: 'students';
+        value: number | Student;
+      };
   key?: string | null;
   value?:
     | {
@@ -1326,17 +1663,88 @@ export interface CertificationsSelect<T extends boolean = true> {
   title?: T;
   generateSlug?: T;
   slug?: T;
+  examStatus?: T;
+  replacedBy?: T;
+  certCategory?: T;
+  publishedAt?: T;
   vendor?: T;
   examCode?: T;
+  isSiteCode?: T;
+  passingScore?: T;
+  examQuestionCount?: T;
+  durationMinutes?: T;
+  delivery?: T;
+  officialUrl?: T;
+  summary?: T;
+  heroImage?: T;
+  domains?:
+    | T
+    | {
+        name?: T;
+        weight?: T;
+        studyGuide?: T;
+        id?: T;
+      };
+  overview?: T;
+  whoItsFor?: T;
+  background?: T;
+  roles?:
+    | T
+    | {
+        role?: T;
+        id?: T;
+      };
+  authorName?: T;
+  authorRole?: T;
+  reviewerName?: T;
+  reviewerCredential?: T;
+  studyPlan?:
+    | T
+    | {
+        label?: T;
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  comparisonRows?:
+    | T
+    | {
+        label?: T;
+        thisExam?: T;
+        otherExam?: T;
+        id?: T;
+      };
+  comparedExamName?: T;
+  officialResources?:
+    | T
+    | {
+        name?: T;
+        description?: T;
+        url?: T;
+        id?: T;
+      };
+  affiliateCourses?:
+    | T
+    | {
+        type?: T;
+        partner?: T;
+        title?: T;
+        url?: T;
+        bulletOne?: T;
+        bulletTwo?: T;
+        id?: T;
+      };
+  relatedCertifications?: T;
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
   category?: T;
   difficulty?: T;
-  heroImage?: T;
-  summary?: T;
-  overview?: T;
-  passingScore?: T;
-  durationMinutes?: T;
   affiliateLink?: T;
-  publishedAt?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1347,7 +1755,24 @@ export interface CertificationsSelect<T extends boolean = true> {
  */
 export interface QuestionsSelect<T extends boolean = true> {
   certification?: T;
+  domainName?: T;
   questionText?: T;
+  optionA?: T;
+  optionB?: T;
+  optionC?: T;
+  optionD?: T;
+  correctAnswer?: T;
+  explanation?: T;
+  whyA?: T;
+  whyB?: T;
+  whyC?: T;
+  whyD?: T;
+  hint?: T;
+  blogPostUrl?: T;
+  referenceUrl?: T;
+  level?: T;
+  questionType?: T;
+  contentHash?: T;
   options?:
     | T
     | {
@@ -1355,7 +1780,6 @@ export interface QuestionsSelect<T extends boolean = true> {
         isCorrect?: T;
         id?: T;
       };
-  explanation?: T;
   topic?: T;
   difficulty?: T;
   updatedAt?: T;
@@ -1488,6 +1912,7 @@ export interface UsersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
+  resetPasswordRequestedAt?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -1497,6 +1922,112 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "students_select".
+ */
+export interface StudentsSelect<T extends boolean = true> {
+  name?: T;
+  dailyGoal?: T;
+  currentStreak?: T;
+  longestStreak?: T;
+  lastActiveDate?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  resetPasswordRequestedAt?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attempts_select".
+ */
+export interface AttemptsSelect<T extends boolean = true> {
+  student?: T;
+  certification?: T;
+  mode?: T;
+  status?: T;
+  domainFilter?: T;
+  questionIds?: T;
+  responses?: T;
+  currentIndex?: T;
+  startedAt?: T;
+  deadline?: T;
+  submittedAt?: T;
+  timeUsedSeconds?: T;
+  totalQuestions?: T;
+  correctCount?: T;
+  scorePercent?: T;
+  passed?: T;
+  domainResults?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attempt-answers_select".
+ */
+export interface AttemptAnswersSelect<T extends boolean = true> {
+  attempt?: T;
+  student?: T;
+  question?: T;
+  certification?: T;
+  domainName?: T;
+  chosen?: T;
+  isCorrect?: T;
+  answeredAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bookmarks_select".
+ */
+export interface BookmarksSelect<T extends boolean = true> {
+  student?: T;
+  question?: T;
+  certification?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-stats_select".
+ */
+export interface AnswerStatsSelect<T extends boolean = true> {
+  question?: T;
+  countA?: T;
+  countB?: T;
+  countC?: T;
+  countD?: T;
+  total?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "problem-reports_select".
+ */
+export interface ProblemReportsSelect<T extends boolean = true> {
+  question?: T;
+  student?: T;
+  message?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1905,7 +2436,15 @@ export interface TaskSchedulePublish {
           value: number | Post;
         } | null);
     global?: string | null;
-    user?: (number | null) | User;
+    user?:
+      | ({
+          relationTo: 'users';
+          value: number | User;
+        } | null)
+      | ({
+          relationTo: 'students';
+          value: number | Student;
+        } | null);
   };
   output?: unknown;
 }

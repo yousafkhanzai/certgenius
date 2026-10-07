@@ -17,7 +17,7 @@ const BeforeDashboard: React.FC = () => {
       <ul className={`${baseClass}__instructions`}>
         <li>
           Add or edit certifications and practice questions under &ldquo;Certification
-          Content&rdquo; in the menu.
+          Content&rdquo; in the menu, or <a href="/admin/import">import them from a spreadsheet</a>.
         </li>
         <li>
           <a href="/" target="_blank">

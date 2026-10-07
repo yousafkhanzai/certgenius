@@ -4,6 +4,8 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { ArrowRight } from 'lucide-react'
 
+import { visibleInListings } from '@/collections/Certifications/options'
+
 const difficultyStyles: Record<string, string> = {
   beginner: 'bg-[oklch(94%_0.08_160deg)] text-[oklch(30%_0.1_160deg)]',
   intermediate: 'bg-[oklch(93%_0.09_85deg)] text-[oklch(35%_0.1_85deg)]',
@@ -22,6 +24,7 @@ export const FeaturedCertifications: React.FC = async () => {
     limit: 3,
     overrideAccess: false,
     sort: '-publishedAt',
+    where: visibleInListings,
   })
 
   if (certifications.docs.length === 0) return null

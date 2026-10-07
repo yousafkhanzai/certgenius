@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 import Link from 'next/link'
 import React from 'react'
 
+import { visibleInListings } from '@/collections/Certifications/options'
 import { JsonLd } from '@/components/JsonLd'
 import { breadcrumbSchema } from '@/utilities/schema'
 
@@ -20,6 +21,7 @@ export default async function CertificationsPage() {
     limit: 100,
     overrideAccess: false,
     sort: '-publishedAt',
+    where: visibleInListings,
   })
 
   return (
