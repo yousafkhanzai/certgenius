@@ -1,6 +1,6 @@
 import type { Payload } from 'payload'
 
-import { validateHttpUrl } from '@/access/roles'
+import { validateHttpUrl, validateLinkOrSitePath } from '@/access/roles'
 import { questionHash } from '@/collections/Questions/hash'
 import type { ImportRow, RowResult } from './columns'
 
@@ -95,8 +95,11 @@ export async function checkQuestionRows(payload: Payload, rows: ImportRow[]): Pr
     }
     const type = (v.question_type || 'single').toLowerCase()
     if (type !== 'single') problems.push(`question_type must be "single" (got "${v.question_type}")`)
-    for (const col of ['blog_post_url', 'reference_url']) {
-      if (v[col] && validateHttpUrl(v[col]) !== true) problems.push(`${col} is not a valid https:// link`)
+    if (v.blog_post_url && validateLinkOrSitePath(v.blog_post_url) !== true) {
+      problems.push('blog_post_url must be an https:// link or a path on this site starting with /')
+    }
+    if (v.reference_url && validateHttpUrl(v.reference_url) !== true) {
+      problems.push('reference_url is not a valid https:// link')
     }
 
     const label = (v.question_text || '').slice(0, 120)

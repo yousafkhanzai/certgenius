@@ -7,6 +7,7 @@ import React, { useState } from 'react'
 
 import {
   CERT_SHEET_NAME,
+  CERT_SHEET_OPTIONS,
   IMPORT_BATCH_SIZE,
   checkCertHeader,
   checkQuestionHeader,
@@ -171,7 +172,10 @@ function ImportCard({ kind }: { kind: Kind }) {
     try {
       setBusy('Reading file...')
       const sheet = await readFile(file, kind)
-      const { header, rows: parsed } = rowsFromSheet(sheet)
+      const { header, rows: parsed } = rowsFromSheet(
+        sheet,
+        kind === 'certifications' ? CERT_SHEET_OPTIONS : {},
+      )
       const headerProblem = kind === 'questions' ? checkQuestionHeader(header) : checkCertHeader(header)
       if (headerProblem) throw new Error(headerProblem)
       if (!parsed.length) throw new Error('The file has a header row but no data rows.')

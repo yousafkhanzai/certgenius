@@ -24,6 +24,19 @@ export const CERT_COLUMNS = ['name', 'exam_code', 'vendor', 'slug', 'category', 
 
 export const CERT_SHEET_NAME = 'Topics and Subtopics'
 
+// The Topics spreadsheet names some columns differently; these are read as
+// the standard ones. Other columns (topic, priority, notes) are ignored.
+export const CERT_HEADER_ALIASES: Record<string, string> = {
+  subtopic_certification: 'name',
+  certification: 'name',
+  certification_name: 'name',
+  topic_category: 'category',
+  code: 'exam_code',
+}
+
+// "—", "-" and "n/a" in a spreadsheet mean "no value".
+const PLACEHOLDERS = new Set(['—', '–', '-', 'n/a', 'na', 'none'])
+
 // Rows are sent to the server in batches this size, which keeps each request
 // well under Vercel's 4.5 MB request limit even with long explanations.
 export const IMPORT_BATCH_SIZE = 250
@@ -79,14 +92,26 @@ export function cellToText(value: unknown): string {
   return String(value).trim()
 }
 
-export function rowsFromSheet(sheet: unknown[][]): { header: string[]; rows: ImportRow[] } {
+// Question files are imported exactly as written; only the certification
+// sheet uses aliases and "—"-style placeholders.
+export const CERT_SHEET_OPTIONS = { aliases: CERT_HEADER_ALIASES, blankPlaceholders: true }
+
+export function rowsFromSheet(
+  sheet: unknown[][],
+  { aliases = {}, blankPlaceholders = false }: { aliases?: Record<string, string>; blankPlaceholders?: boolean } = {},
+): { header: string[]; rows: ImportRow[] } {
   const [headerRow = [], ...body] = sheet
-  const header = headerRow.map(normalizeHeader)
+  const header = headerRow.map((h) => {
+    const n = normalizeHeader(h)
+    return aliases[n] ?? n
+  })
   const rows: ImportRow[] = []
   body.forEach((cells, i) => {
     const values: Record<string, string> = {}
     header.forEach((h, c) => {
-      if (h) values[h] = cellToText(cells[c])
+      if (!h) return
+      const text = cellToText(cells[c])
+      values[h] = blankPlaceholders && PLACEHOLDERS.has(text.toLowerCase()) ? '' : text
     })
     // Skip completely empty lines.
     if (Object.values(values).some((v) => v !== '')) rows.push({ row: i + 2, values })

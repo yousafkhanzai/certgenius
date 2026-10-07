@@ -1,7 +1,7 @@
 import type { CollectionConfig, FieldAccess, TextareaField, TextField } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
-import { validateHttpUrl } from '../../access/roles'
+import { validateHttpUrl, validateLinkOrSitePath } from '../../access/roles'
 import { questionImportEndpoint } from '../../import/endpoints'
 import { questionHash } from './hash'
 
@@ -31,11 +31,11 @@ const whyField = (letter: 'A' | 'B' | 'C' | 'D'): TextareaField => ({
   admin: { rows: 2 },
 })
 
-const urlField = (name: string, label: string): TextField => ({
+const urlField = (name: string, label: string, allowSitePath = false): TextField => ({
   name,
   type: 'text',
   label,
-  validate: validateHttpUrl,
+  validate: allowSitePath ? validateLinkOrSitePath : validateHttpUrl,
 })
 
 export const Questions: CollectionConfig = {
@@ -126,7 +126,10 @@ export const Questions: CollectionConfig = {
     },
     {
       type: 'row',
-      fields: [urlField('blogPostUrl', 'Study guide link'), urlField('referenceUrl', 'Official reference link')],
+      fields: [
+        urlField('blogPostUrl', 'Study guide link', true),
+        urlField('referenceUrl', 'Official reference link'),
+      ],
     },
     {
       name: 'level',

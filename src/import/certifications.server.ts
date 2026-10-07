@@ -29,17 +29,24 @@ type Checked = RowResult & {
 
 export async function checkCertificationRows(payload: Payload, rows: ImportRow[]): Promise<Checked[]> {
   const slugs = Array.from(new Set(rows.map((r) => r.values.slug).filter(Boolean)))
+  const codes = Array.from(new Set(rows.map((r) => r.values.exam_code).filter(Boolean)))
   const existing = await payload.find({
     collection: 'certifications',
-    where: { slug: { in: slugs } },
+    where: { or: [{ slug: { in: slugs } }, { examCode: { in: codes } }] },
     draft: true,
     depth: 0,
-    limit: slugs.length || 1,
+    limit: 0,
     pagination: false,
     overrideAccess: true,
-    select: { slug: true },
+    select: { slug: true, examCode: true },
   })
   const existingBySlug = new Map(existing.docs.map((d) => [d.slug, Number(d.id)]))
+  // A certification already on the site under a different web address (e.g.
+  // "microsoft-azure-ai-fundamentals" vs "azure-ai-fundamentals") is matched
+  // by its exam code, so importing never creates a second copy of it.
+  const existingByCode = new Map(
+    existing.docs.filter((d) => d.examCode).map((d) => [d.examCode as string, { id: Number(d.id), slug: d.slug }]),
+  )
 
   const seen = new Set<string>()
   return rows.map(({ row, values: v }) => {
@@ -84,6 +91,18 @@ export async function checkCertificationRows(payload: Payload, rows: ImportRow[]
     const existingId = existingBySlug.get(v.slug)
     if (existingId !== undefined) {
       return { row, status: 'exists', problems: [], label, key: v.slug, data, existingId }
+    }
+    const byCode = v.exam_code ? existingByCode.get(v.exam_code) : undefined
+    if (byCode) {
+      return {
+        row,
+        status: 'exists',
+        problems: [`same exam code as the existing "${byCode.slug}" - that one is kept`],
+        label,
+        key: v.slug,
+        data,
+        existingId: byCode.id,
+      }
     }
     return { row, status: 'valid', problems, label, key: v.slug, data }
   })

@@ -44,3 +44,11 @@ export const validateHttpUrl = (value: unknown): true | string => {
   }
   return 'Must be a full link starting with https://'
 }
+
+// Same, but also accepts a path on this site such as "/blog/solidity-basics/".
+// "//host" is rejected because browsers treat it as another website.
+export const validateLinkOrSitePath = (value: unknown): true | string => {
+  if (typeof value === 'string' && /^\/(?![/\\])[^\s]*$/.test(value)) return true
+  const result = validateHttpUrl(value)
+  return result === true ? true : 'Must be a full https:// link or a path on this site starting with /'
+}
