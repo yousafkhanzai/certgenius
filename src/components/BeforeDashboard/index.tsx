@@ -1,4 +1,5 @@
 import { Banner } from '@payloadcms/ui/elements/Banner'
+import { Card } from '@payloadcms/ui'
 import React from 'react'
 
 import './index.scss'
@@ -14,10 +15,20 @@ const BeforeDashboard: React.FC = () => {
       <Banner className={`${baseClass}__banner`} type="success">
         <h4>Welcome to the CertGenius dashboard</h4>
       </Banner>
+
+      <h2 className={`${baseClass}__heading`}>Tools</h2>
+      <div className={`${baseClass}__cards`}>
+        <Card
+          title="Import spreadsheets"
+          href="/admin/import"
+          buttonAriaLabel="Import certifications or questions from a spreadsheet"
+        />
+      </div>
+
       <ul className={`${baseClass}__instructions`}>
         <li>
           Add or edit certifications and practice questions under &ldquo;Certification
-          Content&rdquo; in the menu, or <a href="/admin/import">import them from a spreadsheet</a>.
+          Content&rdquo; below, or <a href="/admin/import">import them from a spreadsheet</a>.
         </li>
         <li>
           <a href="/" target="_blank">

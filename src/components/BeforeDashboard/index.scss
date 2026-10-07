@@ -9,6 +9,22 @@
     }
   }
 
+  &__heading {
+    margin: base(1.5) 0 base(0.75);
+  }
+
+  // Same width as the collection cards further down the dashboard.
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(base(10), 1fr));
+    gap: base(0.75);
+    margin-bottom: base(1.5);
+
+    @include mid-break {
+      grid-template-columns: 1fr;
+    }
+  }
+
   &__instructions {
     list-style: decimal;
     margin-bottom: base(0.5);
