@@ -11,6 +11,10 @@ FIRST: save this whole message as CLAUDE.md in the project root so you remember 
 - Production build must use webpack, not Turbopack (Turbopack had an intermittent PostCSS crash).
 - If something in this spec is unclear or conflicts with the existing code, ask me instead of guessing.
 
+=== PUBLISHING RULE ===
+- We do NOT publish all 169 certifications at once. Certifications are imported as drafts and published one at a time, only when that certification has its questions and study guides ready.
+- Draft certifications must never appear anywhere on the public site: not in listings, counts, search, the sitemap or "Just added". Every public query must read published documents only (overrideAccess: false, no draft flag), and any count/stat must be computed from published certifications only.
+
 === EXISTING PROJECT ===
 - Next.js 16 + Payload CMS 3 admin, Neon Postgres, deployed on Vercel. Domain is registered at Namecheap.
 - Existing collections: Certifications, Practice Questions, plus blog Posts and Pages from the template.
