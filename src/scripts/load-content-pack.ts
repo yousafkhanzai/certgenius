@@ -237,6 +237,40 @@ for (const spec of certSpecs) {
   }
 }
 
+// ---------- 3b. Move older questions into the new domains ----------
+// Optional domain-remap.json: { "<cert slug>": { "<old domain>": "<new domain>" } }.
+// Only questions whose domain exactly matches an old name are changed.
+
+const remapFile = path.join(packDir, 'domain-remap.json')
+if (existsSync(remapFile)) {
+  console.log('\n== Move older questions to the new domains')
+  const remap = JSON.parse(readFileSync(remapFile, 'utf8')) as Record<string, Record<string, string>>
+  for (const [slug, mapping] of Object.entries(remap)) {
+    const cert = (
+      await payload.find({ collection: 'certifications', where: { slug: { equals: slug } }, draft: true, limit: 1, depth: 0 })
+    ).docs[0]
+    if (!cert) throw new Error(`domain-remap.json: certification "${slug}" not found`)
+    const spec = certSpecs.find((c) => c.slug === slug)
+    for (const [from, to] of Object.entries(mapping)) {
+      if (spec && !spec.domains.some((d) => d.name === to)) {
+        throw new Error(`domain-remap.json: "${to}" is not a domain of ${slug}`)
+      }
+      const matches = await payload.find({
+        collection: 'questions',
+        where: { and: [{ certification: { equals: cert.id } }, { domainName: { equals: from } }] },
+        depth: 0,
+        limit: 0,
+        pagination: false,
+      })
+      console.log(`  ${slug}: ${matches.docs.length} question(s) "${from}" -> "${to}"`)
+      if (!apply) continue
+      for (const q of matches.docs) {
+        await payload.update({ collection: 'questions', id: q.id, data: { domainName: to }, context: ctx })
+      }
+    }
+  }
+}
+
 // ---------- 4. Questions ----------
 
 console.log('\n== Questions')
