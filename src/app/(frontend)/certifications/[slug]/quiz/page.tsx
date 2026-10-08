@@ -106,7 +106,7 @@ export default async function QuizStartPage({ params }: Args) {
               </span>
             </div>
             <h1 className="m-0 text-[34px] font-extrabold leading-[1.05] tracking-[-0.035em] sm:text-[48px]">{cert.title}</h1>
-            <div className="flex flex-wrap gap-7 text-[15px] text-[#475467]">
+            <div className="flex flex-wrap gap-x-7 gap-y-1 text-[15px] text-[#475467]">
               {cert.examQuestionCount ? (
                 <span>
                   <strong className="font-bold text-[#0B1220]">{cert.examQuestionCount}</strong> questions

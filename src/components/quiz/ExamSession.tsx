@@ -365,7 +365,7 @@ export function ExamSession(props: Props) {
               </button>
               {index + 1 < total ? (
                 <button type="button" onClick={() => goTo(index + 1)} className={`${primaryButton} h-12 text-[15px]`}>
-                  Next question
+                  Next<span className="hidden sm:inline"> question</span>
                   <ChevronRight />
                 </button>
               ) : (
