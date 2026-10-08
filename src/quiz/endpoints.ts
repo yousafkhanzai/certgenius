@@ -371,6 +371,13 @@ const bookmark = endpoint('/quiz/bookmark', async (req) => {
   )
   if (!rows[0]) return fail('Question not found.', 404)
   if (data.on === true) {
+    // Only questions this student has been given in one of their sessions,
+    // so bookmarks can't be used to reach unseen answers.
+    const seen = await pool(req.payload).query(
+      `select 1 from attempts where student_id = $1 and question_ids @> $2::jsonb limit 1`,
+      [sid, JSON.stringify([qid])],
+    )
+    if (!seen.rowCount) return fail('You can only bookmark questions from your sessions.', 403)
     await pool(req.payload).query(
       `insert into bookmarks (student_id, question_id, certification_id, updated_at, created_at)
        values ($1, $2, $3, now(), now()) on conflict (student_id, question_id) do nothing`,

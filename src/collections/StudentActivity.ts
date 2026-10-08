@@ -108,7 +108,9 @@ export const Bookmarks: CollectionConfig = {
   slug: 'bookmarks',
   labels: { singular: 'Bookmark', plural: 'Bookmarks' },
   access: {
-    create: ({ req }) => isAdminUser(req) || isStudentUser(req),
+    // Students bookmark through /api/quiz/bookmark, which only allows
+    // questions they have actually been given in a session.
+    create: adminOnly,
     read: adminOrOwn(),
     update: adminOnly,
     delete: adminOrOwn(),

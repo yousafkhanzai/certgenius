@@ -240,8 +240,9 @@ async function optionStats(payload: Payload, ids: number[]): Promise<Map<number,
   ])
   const map = new Map<number, Record<Letter, number>>()
   for (const r of rows) {
-    if (r.total < STATS_MIN_ANSWERS) continue
-    const pct = (n: number) => Math.round(((n || 0) / r.total) * 100)
+    const total = Number(r.total)
+    if (total < STATS_MIN_ANSWERS) continue
+    const pct = (n: number) => Math.round((Number(n || 0) / total) * 100)
     map.set(r.question_id, { A: pct(r.count_a), B: pct(r.count_b), C: pct(r.count_c), D: pct(r.count_d) })
   }
   return map
@@ -381,7 +382,21 @@ export async function getOwnAttempt(payload: Payload, attemptId: number, student
     attemptId,
     studentId,
   ])
-  return rows[0] ?? null
+  return rows[0] ? normalizeAttempt(rows[0]) : null
+}
+
+// Payload stores number fields as Postgres "numeric", which the driver
+// returns as text: turn them back into numbers before any arithmetic.
+const num = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v))
+function normalizeAttempt(row: AttemptRow): AttemptRow {
+  return {
+    ...row,
+    current_index: num(row.current_index),
+    time_used_seconds: num(row.time_used_seconds),
+    total_questions: num(row.total_questions),
+    correct_count: num(row.correct_count),
+    score_percent: num(row.score_percent),
+  }
 }
 
 export async function createAttempt(

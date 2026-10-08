@@ -26,8 +26,8 @@ export async function headerStats(payload: Payload, student: Student): Promise<H
   const initials = ((parts[0]?.[0] || '?') + (parts[1]?.[0] || '')).toUpperCase()
   return {
     initials,
-    streak: rows[0]?.streak ?? 0,
-    dailyGoal: student.dailyGoal || 25,
+    streak: Number(rows[0]?.streak ?? 0),
+    dailyGoal: Number(student.dailyGoal) || 25,
     answeredToday: rows[0]?.today ?? 0,
   }
 }
@@ -56,7 +56,7 @@ export async function examHistory(payload: Payload, studentId: number, certId: n
   )
   return rows.map((r) => ({
     id: r.id,
-    score: r.score_percent ?? 0,
+    score: Number(r.score_percent ?? 0),
     passed: Boolean(r.passed),
     submittedAt: new Date(r.submitted_at).toISOString(),
     domainResults: r.domain_results || {},
@@ -89,6 +89,79 @@ export async function masteryByDomain(payload: Payload, studentId: number, certI
     [studentId, certId],
   )
   return new Map(rows.map((r) => [r.domain_name, r.mastered]))
+}
+
+// Certifications the student has practised or taken exams in, most recent first.
+export async function activeCertificationIds(payload: Payload, studentId: number): Promise<number[]> {
+  const { rows } = await pool(payload).query<{ certification_id: number }>(
+    `select certification_id from attempts where student_id = $1
+     group by certification_id order by max(started_at) desc`,
+    [studentId],
+  )
+  return rows.map((r) => r.certification_id)
+}
+
+export type ExamHistoryRow = {
+  id: number
+  certificationId: number
+  score: number
+  passed: boolean
+  submittedAt: string
+  timeUsedSeconds: number
+  totalQuestions: number
+}
+
+// All submitted exam simulations, newest first.
+export async function allExamHistory(payload: Payload, studentId: number, limit = 20, offset = 0) {
+  const { rows } = await pool(payload).query<{
+    id: number
+    certification_id: number
+    score_percent: number
+    passed: boolean
+    submitted_at: Date
+    time_used_seconds: number
+    total_questions: number
+    total: number
+  }>(
+    `select id, certification_id, score_percent, passed, submitted_at, time_used_seconds, total_questions,
+            count(*) over ()::int as total
+     from attempts where student_id = $1 and mode = 'exam' and status = 'submitted'
+     order by submitted_at desc limit $2 offset $3`,
+    [studentId, limit, offset],
+  )
+  return {
+    total: rows[0]?.total ?? 0,
+    rows: rows.map(
+      (r): ExamHistoryRow => ({
+        id: r.id,
+        certificationId: r.certification_id,
+        score: Number(r.score_percent ?? 0),
+        passed: Boolean(r.passed),
+        submittedAt: new Date(r.submitted_at).toISOString(),
+        timeUsedSeconds: Number(r.time_used_seconds ?? 0),
+        totalQuestions: Number(r.total_questions ?? 0),
+      }),
+    ),
+  }
+}
+
+export async function practiceTotals(payload: Payload, studentId: number) {
+  const { rows } = await pool(payload).query<{ answered: number; correct: number }>(
+    `select count(*)::int as answered, count(*) filter (where is_correct)::int as correct
+     from attempt_answers where student_id = $1`,
+    [studentId],
+  )
+  return rows[0] ?? { answered: 0, correct: 0 }
+}
+
+// Questions in an unfinished exam: their answers must not be shown anywhere yet.
+export async function questionsInOpenExams(payload: Payload, studentId: number): Promise<Set<number>> {
+  const { rows } = await pool(payload).query<{ id: number }>(
+    `select distinct (jsonb_array_elements_text(question_ids))::int as id from attempts
+     where student_id = $1 and mode = 'exam' and status = 'in-progress'`,
+    [studentId],
+  )
+  return new Set(rows.map((r) => r.id))
 }
 
 export async function unfinishedExam(

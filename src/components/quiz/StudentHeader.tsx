@@ -11,7 +11,7 @@ export function StudentHeader({
   next,
 }: {
   stats: HeaderStats | null
-  active?: 'certifications' | 'guides'
+  active?: 'certifications' | 'guides' | 'bookmarks'
   next: string
 }) {
   const navLink = (href: string, label: string, isActive: boolean) => (
@@ -36,6 +36,7 @@ export function StudentHeader({
           <nav aria-label="Main" className="order-3 flex w-full flex-wrap gap-1 text-[15px] font-medium sm:w-auto">
             {navLink('/certifications', 'Certifications', active === 'certifications')}
             {navLink('/posts', 'Study guides', active === 'guides')}
+            {stats && navLink('/bookmarks', 'Bookmarks', active === 'bookmarks')}
           </nav>
         </div>
 
@@ -46,8 +47,10 @@ export function StudentHeader({
               aria-label={`${stats.streak}-day streak`}
             >
               <FlameIcon size={16} strokeWidth={2.2} />
-              {stats.streak}
-              <span className="hidden sm:inline">-day streak</span>
+              <span>
+                {stats.streak}
+                <span className="hidden sm:inline">-day streak</span>
+              </span>
             </span>
             <span
               className="hidden h-9 items-center gap-2 rounded-full bg-[#F2F4F7] px-3 text-sm font-semibold text-[#344054] sm:flex"
