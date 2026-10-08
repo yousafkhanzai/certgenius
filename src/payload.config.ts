@@ -22,6 +22,7 @@ import {
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
+import { quizEndpoints } from './quiz/endpoints'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
 
@@ -119,6 +120,8 @@ export default buildConfig({
     AnswerStats,
     ProblemReports,
   ],
+  // Quiz API: /api/quiz/... (see src/quiz/endpoints.ts).
+  endpoints: quizEndpoints,
   cors: trustedOrigins,
   // Login cookies are only honoured on requests coming from our own site, so
   // another website can't make a visitor's browser act on their account.

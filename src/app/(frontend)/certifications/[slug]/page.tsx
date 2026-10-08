@@ -99,7 +99,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
 
         <div className="flex flex-wrap gap-3 mb-10">
           <Link
-            href={`/certifications/${cert.slug}/practice`}
+            href={`/certifications/${cert.slug}/quiz`}
             className="inline-flex items-center rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 px-6 py-3 font-semibold no-underline"
           >
             Start Free Practice Test ({questionCount.totalDocs} question

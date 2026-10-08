@@ -6,6 +6,7 @@ import { GeistSans } from 'geist/font/sans'
 import React from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
+import { ChromeGate } from '@/components/ChromeGate'
 import { JsonLd } from '@/components/JsonLd'
 import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
@@ -39,9 +40,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             }}
           />
 
-          <Header />
-          {children}
-          <Footer />
+          <ChromeGate header={<Header />} footer={<Footer />}>
+            {children}
+          </ChromeGate>
         </Providers>
       </body>
     </html>

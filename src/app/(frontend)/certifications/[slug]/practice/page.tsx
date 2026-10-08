@@ -1,87 +1,109 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
+import { notFound, redirect } from 'next/navigation'
 import { getPayload } from 'payload'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import React from 'react'
 
-import { PracticeTest } from '@/components/PracticeTest'
+import { PracticeSession } from '@/components/quiz/PracticeSession'
+import { feedbackFor, getOwnAttempt, getPublishedCertification, guestQuestionIds, pool, publicQuestions } from '@/quiz/server'
+import type { PracticeResponses } from '@/quiz/types'
+import { getStudent } from '@/utilities/getStudent'
 
 export const dynamic = 'force-dynamic'
 
 type Args = {
-  params: Promise<{ slug?: string }>
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ session?: string; claim?: string }>
 }
 
-export default async function PracticeTestPage({ params: paramsPromise }: Args) {
-  const { slug = '' } = await paramsPromise
-  const decodedSlug = decodeURIComponent(slug)
+// Screen 3 of content/quiz-designs. Students practise inside a saved session
+// (?session=<attempt id>); guests get the certification's first 10 questions.
+export default async function PracticePage({ params, searchParams }: Args) {
+  const { slug } = await params
+  const { session, claim } = await searchParams
   const payload = await getPayload({ config: configPromise })
+  const cert = await getPublishedCertification(payload, decodeURIComponent(slug))
+  if (!cert) notFound()
+  const student = await getStudent()
+  const certSlug = cert.slug as string
 
-  const certResult = await payload.find({
-    collection: 'certifications',
-    limit: 1,
-    overrideAccess: false,
-    where: { slug: { equals: decodedSlug } },
-  })
+  // Signed up after using the free questions: the page turns them into a session.
+  if (student && claim === '1') {
+    return (
+      <PracticeSession
+        key="claim"
+        cert={{ slug: certSlug, title: cert.title }}
+        modeLabel="Practice"
+        questionIds={[]}
+        attemptId={null}
+        initialResponses={{}}
+        first={null}
+        claim
+        finished={false}
+      />
+    )
+  }
 
-  const cert = certResult.docs?.[0]
-  if (!cert) return notFound()
+  let attemptId: number | null = null
+  let questionIds: number[]
+  let responses: PracticeResponses = {}
+  let finished = false
+  let modeLabel: string
 
-  const questionsResult = await payload.find({
-    collection: 'questions',
-    depth: 0,
-    limit: 200,
-    // Answer keys are admin-only in the public API; this page renders on the
-    // server for a published certification, so it may read them.
-    overrideAccess: true,
-    where: { certification: { equals: cert.id } },
-  })
+  if (student) {
+    const attempt = session ? await getOwnAttempt(payload, Number(session), Number(student.id)) : null
+    if (!attempt || attempt.mode !== 'practice' || attempt.certification_id !== Number(cert.id)) {
+      redirect(`/certifications/${certSlug}/quiz`)
+    }
+    attemptId = attempt.id
+    questionIds = attempt.question_ids || []
+    responses = (attempt.responses || {}) as PracticeResponses
+    finished = attempt.status !== 'in-progress'
+    modeLabel = `Practice · ${attempt.domain_filter || 'All domains'}`
+  } else {
+    questionIds = await guestQuestionIds(payload, Number(cert.id))
+    modeLabel = 'Practice · Free questions'
+  }
 
-  const letters = ['A', 'B', 'C', 'D'] as const
-  const questions = questionsResult.docs
-    .filter((q) => q.optionA && q.correctAnswer)
-    .map((q) => ({
-      id: String(q.id),
-      questionText: q.questionText,
-      explanation: q.explanation || undefined,
-      options: letters.map((letter) => ({
-        text: q[`option${letter}`] || '',
-        isCorrect: q.correctAnswer === letter,
-      })),
-    }))
+  // Render the first unanswered question straight away (no loading flash).
+  const firstId = questionIds.find((id) => !responses[String(id)])
+  let first = null
+  if (firstId && !finished) {
+    const [question] = await publicQuestions(payload, [firstId], cert)
+    if (question) {
+      const prior = responses[String(firstId)]
+      const fb = prior ? (await feedbackFor(payload, [{ questionId: firstId, chosen: prior.c }])).get(firstId) : null
+      let bookmarked = false
+      if (student) {
+        const { rowCount } = await pool(payload).query(
+          'select 1 from bookmarks where student_id = $1 and question_id = $2',
+          [student.id, firstId],
+        )
+        bookmarked = Boolean(rowCount)
+      }
+      first = { question, feedback: fb ?? null, bookmarked }
+    }
+  }
 
   return (
-    <div className="pt-16 pb-24">
-      <div className="container max-w-[46rem]">
-        <div className="flex flex-wrap items-center gap-2 mb-6 text-sm text-muted-foreground">
-          <Link href="/certifications" className="underline">
-            Certifications
-          </Link>
-          <span>/</span>
-          <Link href={`/certifications/${cert.slug}`} className="underline">
-            {cert.title}
-          </Link>
-          <span>/</span>
-          <span>Practice Test</span>
-        </div>
-
-        <h1 className="mb-8">{cert.title} - Practice Test</h1>
-
-        {questions.length === 0 ? (
-          <p className="text-muted-foreground">
-            No practice questions have been added for this certification yet. Add some from the
-            admin dashboard under &ldquo;Practice Questions&rdquo;.
-          </p>
-        ) : (
-          <PracticeTest certTitle={cert.title} questions={questions} />
-        )}
-      </div>
-    </div>
+    <PracticeSession
+      // A new key resets the screen when moving from the sign-up hand-over
+      // (or a guest session) to a saved session.
+      key={attemptId ?? 'guest'}
+      cert={{ slug: certSlug, title: cert.title }}
+      modeLabel={modeLabel}
+      questionIds={questionIds}
+      attemptId={attemptId}
+      initialResponses={responses}
+      first={first}
+      claim={false}
+      finished={finished}
+    />
   )
 }
 
-export function generateMetadata(): Metadata {
-  return { title: 'Practice Test' }
+export const metadata: Metadata = {
+  title: 'Practice | CertGenius',
+  robots: { index: false },
 }
