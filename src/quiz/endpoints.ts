@@ -1,9 +1,12 @@
 import { addDataAndFileToRequest, type Endpoint, type PayloadRequest } from 'payload'
 
 import { isStudentUser } from '@/access/roles'
+import type { Student } from '@/payload-types'
+import { activeCertificationIds, examHistory, headerStats, progressByDomain, readinessFrom } from './progress'
 import {
   DEADLINE_GRACE_MS,
   createAttempt,
+  domainQuestionCounts,
   feedbackFor,
   getOwnAttempt,
   getPublishedCertification,
@@ -411,7 +414,49 @@ const report = endpoint('/quiz/report', async (req) => {
   return json({ ok: true })
 })
 
+// Small summary for the homepage "Welcome back" strip (read in the browser,
+// so the homepage itself can stay a fast static page).
+const summary = endpoint('/quiz/summary', async (req) => {
+  const sid = studentId(req)
+  if (!sid || !req.user) return json({ student: null })
+  const student = req.user as unknown as Student
+  const [stats, certIds] = await Promise.all([headerStats(req.payload, student), activeCertificationIds(req.payload, sid)])
+  let cert: Json | null = null
+  if (certIds[0]) {
+    const doc = await getPublishedCertificationById(req.payload, certIds[0])
+    if (doc) {
+      const [history, progress, counts] = await Promise.all([
+        examHistory(req.payload, sid, certIds[0], 3),
+        progressByDomain(req.payload, sid, certIds[0]),
+        domainQuestionCounts(req.payload, certIds[0]),
+      ])
+      // Weakest domain: lowest share of questions answered correctly.
+      const weakest = (doc.domains || [])
+        .map((d) => ({ name: d.name, total: counts.get(d.name) || 0, correct: progress.get(d.name)?.correct || 0 }))
+        .filter((d) => d.total > 0)
+        .sort((a, b) => a.correct / a.total - b.correct / b.total)[0]
+      cert = {
+        slug: doc.slug,
+        title: doc.title,
+        readiness: readinessFrom(history).score,
+        passScore: doc.passingScore || 0,
+        weakestDomain: weakest?.name ?? null,
+      }
+    }
+  }
+  return json({
+    student: {
+      name: student.name || null,
+      streak: stats.streak,
+      answeredToday: stats.answeredToday,
+      dailyGoal: stats.dailyGoal,
+    },
+    cert,
+  })
+})
+
 export const quizEndpoints: Endpoint[] = [
+  summary,
   practiceStart,
   practiceQuestion,
   practiceAnswer,

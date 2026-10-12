@@ -1,4 +1,5 @@
 import { formatDateTime } from 'src/utilities/formatDateTime'
+import Link from 'next/link'
 import React from 'react'
 
 import type { Post } from '@/payload-types'
@@ -6,68 +7,49 @@ import type { Post } from '@/payload-types'
 import { Media } from '@/components/Media'
 import { formatAuthors } from '@/utilities/formatAuthors'
 
+// Blog post (study guide) header: dark navy hero with breadcrumb, title,
+// author and date. An optional hero image is shown underneath.
 export const PostHero: React.FC<{
   post: Post
 }> = ({ post }) => {
-  const { categories, heroImage, populatedAuthors, publishedAt, title } = post
+  const { heroImage, populatedAuthors, publishedAt, title } = post
 
   const hasAuthors =
     populatedAuthors && populatedAuthors.length > 0 && formatAuthors(populatedAuthors) !== ''
 
   return (
-    <div className="relative -mt-[10.4rem] flex items-end">
-      <div className="container z-10 relative lg:grid lg:grid-cols-[1fr_48rem_1fr] text-white pb-8">
-        <div className="col-start-1 col-span-1 md:col-start-2 md:col-span-2">
-          <div className="uppercase text-sm mb-6">
-            {categories?.map((category, index) => {
-              if (typeof category === 'object' && category !== null) {
-                const { title: categoryTitle } = category
-
-                const titleToUse = categoryTitle || 'Untitled category'
-
-                const isLast = index === categories.length - 1
-
-                return (
-                  <React.Fragment key={index}>
-                    {titleToUse}
-                    {!isLast && <React.Fragment>, &nbsp;</React.Fragment>}
-                  </React.Fragment>
-                )
-              }
-              return null
-            })}
-          </div>
-
-          <div className="">
-            <h1 className="mb-6 text-3xl md:text-5xl lg:text-6xl">{title}</h1>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-4 md:gap-16">
+    <>
+      <div className="bg-hero text-white">
+        <div className="mx-auto flex max-w-[52rem] flex-col gap-5 px-4 py-12 sm:px-6 lg:py-16">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-sm text-hero-muted">
+            <Link href="/" className="text-hero-muted no-underline hover:text-white">
+              Home
+            </Link>
+            <span aria-hidden="true">/</span>
+            <Link href="/posts" className="text-hero-muted no-underline hover:text-white">
+              Study guides
+            </Link>
+          </nav>
+          <h1 className="m-0 text-[30px] font-extrabold leading-[1.1] tracking-[-0.03em] sm:text-[44px]">{title}</h1>
+          <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-hero-body">
             {hasAuthors && (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm">Author</p>
-
-                  <p>{formatAuthors(populatedAuthors)}</p>
-                </div>
-              </div>
+              <span>
+                By <strong className="text-white">{formatAuthors(populatedAuthors)}</strong>
+              </span>
             )}
             {publishedAt && (
-              <div className="flex flex-col gap-1">
-                <p className="text-sm">Date Published</p>
-
-                <time dateTime={publishedAt}>{formatDateTime(publishedAt)}</time>
-              </div>
+              <span>
+                Published <time dateTime={publishedAt}>{formatDateTime(publishedAt)}</time>
+              </span>
             )}
           </div>
         </div>
       </div>
-      <div className="min-h-[80vh] select-none">
-        {heroImage && typeof heroImage !== 'string' && (
-          <Media fill priority imgClassName="-z-10 object-cover" resource={heroImage} />
-        )}
-        <div className="absolute pointer-events-none left-0 bottom-0 w-full h-1/2 bg-linear-to-t from-black to-transparent" />
-      </div>
-    </div>
+      {heroImage && typeof heroImage !== 'string' && typeof heroImage !== 'number' && (
+        <div className="mx-auto max-w-[52rem] px-4 pt-8 sm:px-6">
+          <Media priority imgClassName="rounded-[20px]" resource={heroImage} />
+        </div>
+      )}
+    </>
   )
 }

@@ -50,6 +50,7 @@ export function ModeCards({
   examMinutes,
   passScore,
   unfinishedExam,
+  initialDomain,
 }: {
   certSlug: string
   loggedIn: boolean
@@ -58,9 +59,10 @@ export function ModeCards({
   examMinutes: number
   passScore: number
   unfinishedExam: { id: number; secondsLeft: number } | null
+  initialDomain?: string
 }) {
   const router = useRouter()
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(initialDomain && domains.some((d) => d.name === initialDomain) ? initialDomain : '')
   const [count, setCount] = useState(25)
   const practice = useStartPractice(certSlug, loggedIn)
   const [examBusy, setExamBusy] = useState(false)

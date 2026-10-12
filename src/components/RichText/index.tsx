@@ -20,6 +20,7 @@ import type {
 } from '@/payload-types'
 import { BannerBlock } from '@/blocks/Banner/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
+import { headingId, nodeText } from '@/utilities/headings'
 import { cn } from '@/utilities/ui'
 
 type NodeTypes =
@@ -38,6 +39,17 @@ const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
 const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({
   ...defaultConverters,
   ...LinkJSXConverter({ internalDocToHref }),
+  // Headings get an id so other pages can link straight to a section of a
+  // study guide (e.g. /posts/solidity-fundamentals#data-types).
+  heading: ({ node, nodesToJSX }) => {
+    const Tag = node.tag
+    const id = headingId(nodeText(node as Parameters<typeof nodeText>[0]))
+    return (
+      <Tag id={id || undefined} className="scroll-mt-24">
+        {nodesToJSX({ nodes: node.children })}
+      </Tag>
+    )
+  },
   blocks: {
     banner: ({ node }) => <BannerBlock className="col-start-2 mb-4" {...node.fields} />,
     mediaBlock: ({ node }) => (

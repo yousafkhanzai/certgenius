@@ -24,11 +24,12 @@ import { getStudent } from '@/utilities/getStudent'
 
 export const dynamic = 'force-dynamic'
 
-type Args = { params: Promise<{ slug: string }> }
+type Args = { params: Promise<{ slug: string }>; searchParams?: Promise<{ domain?: string }> }
 
 // Screen 1 of content/quiz-designs: choose practice or exam simulation.
-export default async function QuizStartPage({ params }: Args) {
+export default async function QuizStartPage({ params, searchParams }: Args) {
   const { slug } = await params
+  const initialDomain = (await searchParams)?.domain
   const payload = await getPayload({ config: configPromise })
   const cert = await getPublishedCertification(payload, decodeURIComponent(slug))
   if (!cert) notFound()
@@ -175,6 +176,7 @@ export default async function QuizStartPage({ params }: Args) {
           examQuestions={examQuestions}
           examMinutes={cert.durationMinutes || examQuestions}
           passScore={pass}
+          initialDomain={initialDomain}
           unfinishedExam={
             unfinished
               ? { id: unfinished.id, secondsLeft: Math.round((new Date(unfinished.deadline).getTime() - Date.now()) / 1000) }

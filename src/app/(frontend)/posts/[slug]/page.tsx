@@ -57,7 +57,7 @@ export default async function Post({ params: paramsPromise }: Args) {
     post.meta?.image && typeof post.meta.image === 'object' ? post.meta.image.url : undefined
 
   return (
-    <article className="pt-16 pb-16">
+    <article className="pb-16">
       <PageClient />
       <JsonLd
         data={articleSchema({

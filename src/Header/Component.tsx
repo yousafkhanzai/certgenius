@@ -1,9 +1,9 @@
-import { HeaderClient } from './Component.client'
-import { getCachedGlobal } from '@/utilities/getGlobals'
 import React from 'react'
 
-export async function Header() {
-  const headerData = await getCachedGlobal('header', 1)()
+import { SiteHeader } from '@/components/site/SiteHeader'
 
-  return <HeaderClient data={headerData} />
+// The site header is fixed by the design system (see CLAUDE.md "PUBLIC PAGES"),
+// so it no longer reads its links from the Header global in the admin.
+export async function Header() {
+  return <SiteHeader />
 }

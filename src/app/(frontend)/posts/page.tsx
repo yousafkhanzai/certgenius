@@ -28,11 +28,14 @@ export default async function Page() {
   })
 
   return (
-    <div className="pt-24 pb-24">
+    <div className="pb-24">
       <PageClient />
-      <div className="container mb-16">
-        <div className="prose dark:prose-invert max-w-none">
-          <h1>Posts</h1>
+      <div className="mb-12 bg-hero text-white">
+        <div className="container flex flex-col gap-3 py-14">
+          <h1 className="m-0 text-[36px] font-extrabold leading-tight tracking-[-0.03em] sm:text-[48px]">Study guides</h1>
+          <p className="m-0 max-w-[640px] text-lg leading-relaxed text-hero-body">
+            One guide for every exam domain, covering the practice questions in that domain.
+          </p>
         </div>
       </div>
 
@@ -58,6 +61,7 @@ export default async function Page() {
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Payload Website Template Posts`,
+    title: 'Study guides for IT certification exams | CertGenius',
+    description: 'Free study guides for IT certification exams: one guide per exam domain, covering the practice questions in it.',
   }
 }
