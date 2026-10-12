@@ -32,7 +32,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
       </head>
-      <body>
+      {/* Browser extensions (e.g. Grammarly) add attributes to <body> before
+          React loads; this stops that being reported as an error. */}
+      <body suppressHydrationWarning>
         <Providers>
           <AdminBar
             adminBarProps={{

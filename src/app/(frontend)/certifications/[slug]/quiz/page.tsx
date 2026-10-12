@@ -10,7 +10,15 @@ import { CERT_CATEGORIES } from '@/collections/Certifications/options'
 import { MasteryCards, ModeCards } from '@/components/quiz/ModeCards'
 import { StudentHeader } from '@/components/quiz/StudentHeader'
 import { QuizPage } from '@/components/quiz/ui'
-import { examHistory, headerStats, masteryByDomain, readinessFrom, unfinishedExam } from '@/quiz/progress'
+import {
+  examHistory,
+  headerStats,
+  masteryByDomain,
+  progressByDomain,
+  readinessFrom,
+  unfinishedExam,
+  type DomainProgress,
+} from '@/quiz/progress'
 import { domainQuestionCounts, getPublishedCertification } from '@/quiz/server'
 import { getStudent } from '@/utilities/getStudent'
 
@@ -29,19 +37,22 @@ export default async function QuizStartPage({ params }: Args) {
 
   const counts = await domainQuestionCounts(payload, certId)
   const totalQuestions = [...counts.values()].reduce((a, b) => a + b, 0)
-  const [stats, history, mastery, unfinished] = student
+  const [stats, history, mastery, unfinished, progress] = student
     ? await Promise.all([
         headerStats(payload, student),
         examHistory(payload, Number(student.id), certId),
         masteryByDomain(payload, Number(student.id), certId),
         unfinishedExam(payload, Number(student.id), certId),
+        progressByDomain(payload, Number(student.id), certId),
       ])
-    : [null, [], new Map<string, number>(), null]
+    : [null, [], new Map<string, number>(), null, new Map<string, DomainProgress>()]
 
   const domains = (cert.domains || []).map((d) => ({
     name: d.name,
     questions: counts.get(d.name) || 0,
     mastered: mastery.get(d.name) || 0,
+    practised: progress.get(d.name)?.practised || 0,
+    correct: progress.get(d.name)?.correct || 0,
   }))
   const readiness = readinessFrom(history)
   const pass = cert.passingScore || 0

@@ -1,12 +1,14 @@
-import Script from 'next/script'
 import React from 'react'
 
 import { defaultTheme, themeLocalStorageKey } from '../ThemeSelector/types'
 
+// Sets the light/dark theme before the page paints (no flash of the wrong
+// theme). A plain inline script rendered on the server: next/script here made
+// React warn about a script tag inside a client-rendered component.
 export const InitTheme: React.FC = () => {
   return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document
-    <Script
+    <script
+      id="theme-script"
       dangerouslySetInnerHTML={{
         __html: `
   (function () {
@@ -43,8 +45,6 @@ export const InitTheme: React.FC = () => {
   })();
   `,
       }}
-      id="theme-script"
-      strategy="beforeInteractive"
     />
   )
 }

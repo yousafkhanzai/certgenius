@@ -164,6 +164,95 @@ export async function questionsInOpenExams(payload: Payload, studentId: number):
   return new Set(rows.map((r) => r.id))
 }
 
+export type DomainProgress = { practised: number; correct: number }
+
+// Per domain: how many different questions the student has tried, and how many
+// of those they got right the last time they answered them.
+export async function progressByDomain(
+  payload: Payload,
+  studentId: number,
+  certId: number,
+): Promise<Map<string, DomainProgress>> {
+  const { rows } = await pool(payload).query<{ domain_name: string; practised: number; correct: number }>(
+    `with latest as (
+       select distinct on (question_id) question_id, is_correct
+       from attempt_answers where student_id = $1 and certification_id = $2
+       order by question_id, answered_at desc, id desc
+     )
+     select q.domain_name, count(*)::int as practised, count(*) filter (where l.is_correct)::int as correct
+     from latest l join questions q on q.id = l.question_id
+     group by q.domain_name`,
+    [studentId, certId],
+  )
+  return new Map(rows.map((r) => [r.domain_name, { practised: r.practised, correct: r.correct }]))
+}
+
+export type ActivityRow = {
+  id: number
+  mode: 'practice' | 'exam'
+  status: 'in-progress' | 'submitted' | 'abandoned'
+  certificationId: number
+  label: string | null
+  total: number
+  answered: number
+  correct: number
+  score: number | null
+  passed: boolean | null
+  timeUsedSeconds: number | null
+  date: string
+}
+
+// Everything the student has done - practice sessions and exam simulations - newest first.
+export async function activityHistory(payload: Payload, studentId: number, limit = 10, offset = 0) {
+  const { rows } = await pool(payload).query<{
+    id: number
+    mode: 'practice' | 'exam'
+    status: 'in-progress' | 'submitted' | 'abandoned'
+    certification_id: number
+    domain_filter: string | null
+    total: number
+    answered: number
+    correct: number
+    score_percent: string | null
+    passed: boolean | null
+    time_used_seconds: string | null
+    at: Date
+    total_rows: number
+  }>(
+    `select a.id, a.mode, a.status, a.certification_id, a.domain_filter,
+            jsonb_array_length(coalesce(a.question_ids, '[]'::jsonb))::int as total,
+            (select count(*)::int from attempt_answers x where x.attempt_id = a.id) as answered,
+            (select count(*)::int from attempt_answers x where x.attempt_id = a.id and x.is_correct) as correct,
+            a.score_percent, a.passed, a.time_used_seconds,
+            coalesce(a.submitted_at, a.started_at) as at,
+            count(*) over ()::int as total_rows
+     from attempts a
+     where a.student_id = $1
+       and (a.mode = 'exam' or exists (select 1 from attempt_answers x where x.attempt_id = a.id))
+     order by coalesce(a.submitted_at, a.started_at) desc limit $2 offset $3`,
+    [studentId, limit, offset],
+  )
+  return {
+    total: rows[0]?.total_rows ?? 0,
+    rows: rows.map(
+      (r): ActivityRow => ({
+        id: r.id,
+        mode: r.mode,
+        status: r.status,
+        certificationId: r.certification_id,
+        label: r.domain_filter,
+        total: r.total,
+        answered: r.answered,
+        correct: r.correct,
+        score: r.mode === 'exam' ? (r.score_percent === null ? null : Number(r.score_percent)) : r.answered ? Math.round((r.correct / r.answered) * 100) : null,
+        passed: r.passed,
+        timeUsedSeconds: r.time_used_seconds === null ? null : Number(r.time_used_seconds),
+        date: new Date(r.at).toISOString(),
+      }),
+    ),
+  }
+}
+
 export async function unfinishedExam(
   payload: Payload,
   studentId: number,

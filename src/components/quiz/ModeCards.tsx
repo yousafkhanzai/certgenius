@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 
 import { BulbIcon, CheckIcon, TimerIcon, card, formatClock } from './ui'
 
-type Domain = { name: string; questions: number; mastered: number }
+type Domain = { name: string; questions: number; mastered: number; practised?: number; correct?: number }
 
 async function post(url: string, data: unknown) {
   const res = await fetch(url, {
@@ -269,6 +269,11 @@ export function MasteryCards({
                   style={{ width: `${pct}%`, background: pct < 60 ? '#DC6803' : '#2B44E8' }}
                 />
               </span>
+              {loggedIn && (
+                <span className="text-[13px] text-[#475467]">
+                  {d.practised ? `${d.correct ?? 0} correct of ${d.practised} practised` : 'Not started yet'}
+                </span>
+              )}
               <span className="text-[13px] font-semibold text-[#2B44E8]">
                 {d.questions === 0 ? 'No questions yet' : 'Practice this domain'}
               </span>

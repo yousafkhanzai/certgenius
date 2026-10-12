@@ -80,6 +80,42 @@ export default async function BookmarksPage({ searchParams }: Args) {
     rows.filter((r) => !hidden.has(r.question_id)).map((r) => ({ questionId: r.question_id, chosen: 'A' as const })),
   )
   const certTitle = new Map(certRows.map((c) => [c.id, c]))
+
+  // Blogs that cover the student's bookmarks (all of them, not just this
+  // page): each domain has one blog, so group the bookmarks by domain.
+  const { rows: domainRows } = await pool(payload).query<{ certification_id: number; domain_name: string; n: number }>(
+    `select q.certification_id, q.domain_name, count(*)::int as n from bookmarks b
+     join questions q on q.id = b.question_id join certifications c on c.id = q.certification_id
+     where b.student_id = $1 and c._status = 'published' ${activeCert ? 'and c.id = $2' : ''}
+     group by q.certification_id, q.domain_name`,
+    activeCert ? [studentId, activeCert.id] : [studentId],
+  )
+  const guideCertIds = Array.from(new Set(domainRows.map((r) => r.certification_id)))
+  const guideCerts = guideCertIds.length
+    ? (
+        await payload.find({
+          collection: 'certifications',
+          where: { id: { in: guideCertIds } },
+          depth: 1,
+          limit: guideCertIds.length,
+          overrideAccess: false,
+        })
+      ).docs
+    : []
+  const blogs = new Map<string, { title: string; url: string; domain: string; cert: string; count: number }>()
+  let withoutBlog = 0
+  for (const r of domainRows) {
+    const cert = guideCerts.find((c) => Number(c.id) === r.certification_id)
+    const guide = cert?.domains?.find((d) => d.name === r.domain_name)?.studyGuide
+    if (cert && guide && typeof guide === 'object' && guide.slug) {
+      const url = `/posts/${guide.slug}`
+      const existing = blogs.get(url)
+      blogs.set(url, { title: guide.title, url, domain: r.domain_name, cert: cert.title, count: (existing?.count || 0) + r.n })
+    } else {
+      withoutBlog += r.n
+    }
+  }
+  const blogList = [...blogs.values()].sort((a, b) => b.count - a.count)
   const stats = await headerStats(payload, student)
   const qs = (p: number, slug?: string) => {
     const s = new URLSearchParams()
@@ -124,6 +160,39 @@ export default async function BookmarksPage({ searchParams }: Args) {
               </Link>
             ))}
           </nav>
+        )}
+
+        {blogList.length > 0 && (
+          <section aria-label="Blogs for your bookmarks" className="flex flex-col gap-3">
+            <h2 className="m-0 text-lg font-bold">Blogs that cover your bookmarks</h2>
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))]">
+              {blogList.map((b) => (
+                <Link
+                  key={b.url}
+                  href={b.url}
+                  className="flex flex-col gap-2 rounded-[18px] bg-[#0B1220] p-5 text-white no-underline hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2B44E8]"
+                >
+                  <span className="text-xs font-bold tracking-[0.06em] text-[#7CF2B0]">
+                    COVERS {b.count} BOOKMARK{b.count === 1 ? '' : 'S'}
+                  </span>
+                  <span className="text-base font-bold leading-snug">{b.title}</span>
+                  <span className="text-[13px] text-[#C2C9D6]">
+                    {b.cert} · {b.domain}
+                  </span>
+                  <span className="mt-1 flex items-center gap-1.5 text-sm font-bold">
+                    Read the blog <ArrowRight size={15} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+        {rows.length > 0 && withoutBlog > 0 && (
+          <p className="m-0 rounded-xl bg-[#FFFAEB] px-4 py-3 text-sm text-[#93370D]">
+            {blogList.length === 0 ? 'The blogs' : 'Blogs'} for {withoutBlog} of your bookmarked question{withoutBlog === 1 ? '' : 's'}{' '}
+            {withoutBlog === 1 ? "isn't" : "aren't"} published yet. {withoutBlog === 1 ? 'It' : 'They'} will appear here as soon as{' '}
+            {withoutBlog === 1 ? 'it is' : 'they are'}.
+          </p>
         )}
 
         {rows.length === 0 && (
@@ -192,14 +261,21 @@ export default async function BookmarksPage({ searchParams }: Args) {
                 </p>
               )}
 
-              {q.studyGuide && (
+              {q.studyGuide ? (
                 <Link
                   href={q.studyGuide.url}
-                  className="flex w-fit items-center gap-2 rounded-xl bg-[#0B1220] px-4 py-2.5 text-sm font-bold text-white no-underline hover:text-white"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-[#C7D0FA] bg-[#EEF1FF] px-4 py-3 text-[#0B1220] no-underline hover:border-[#2B44E8] hover:text-[#0B1220]"
                 >
-                  Study this topic: {q.studyGuide.title}
-                  <ArrowRight size={15} />
+                  <span className="flex flex-col">
+                    <span className="text-xs font-bold tracking-[0.04em] text-[#2B44E8]">STUDY THIS TOPIC</span>
+                    <span className="text-[15px] font-bold leading-snug">{q.studyGuide.title}</span>
+                  </span>
+                  <span className="flex flex-none items-center gap-1.5 text-sm font-bold text-[#2B44E8]">
+                    Read the blog <ArrowRight size={15} />
+                  </span>
                 </Link>
+              ) : (
+                <p className="m-0 text-[13px] text-[#475467]">The blog for {q.domain} isn&apos;t published yet.</p>
               )}
             </article>
           )

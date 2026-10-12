@@ -276,10 +276,171 @@ function ImportCard({ kind }: { kind: Kind }) {
   )
 }
 
+// Study-guide blogs: one Markdown file per domain.
+function BlogImportCard() {
+  const [files, setFiles] = useState<{ name: string; text: string }[]>([])
+  const [results, setResults] = useState<RowResult[] | null>(null)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState('')
+  const [done, setDone] = useState(false)
+  const [publish, setPublish] = useState(true)
+  const [updateExisting, setUpdateExisting] = useState(false)
+
+  const send = async (commit: boolean) => {
+    const res = await fetch('/api/posts/import-markdown', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files, commit, publish, updateExisting }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(json.error || `Server error (${res.status})`)
+    return json.results as RowResult[]
+  }
+
+  const onFiles = async (list: FileList | null) => {
+    setError('')
+    setResults(null)
+    setDone(false)
+    if (!list || list.length === 0) return
+    try {
+      setBusy('Reading files...')
+      const read = await Promise.all([...list].map(async (f) => ({ name: f.name, text: await f.text() })))
+      setFiles(read)
+      setBusy('Checking...')
+      const res = await fetch('/api/posts/import-markdown', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: read, commit: false }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || `Server error (${res.status})`)
+      setResults(json.results)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read these files.')
+    } finally {
+      setBusy('')
+    }
+  }
+
+  const importable = (results || []).filter((r) => r.status === 'valid' || (updateExisting && r.status === 'exists')).length
+
+  return (
+    <section
+      style={{ border: '1px solid var(--theme-elevation-150)', borderRadius: '14px', padding: '1.5rem', marginBottom: '2rem' }}
+    >
+      <h2 style={{ marginTop: 0 }}>Study-guide blogs</h2>
+      <p style={{ opacity: 0.75 }}>
+        One blog per domain, covering all of that domain&apos;s questions. Upload Markdown (.md) files that start with this header:
+      </p>
+      <pre
+        style={{
+          background: 'var(--theme-elevation-50)',
+          borderRadius: '10px',
+          padding: '0.75rem 1rem',
+          fontSize: '0.85rem',
+          overflowX: 'auto',
+        }}
+      >
+        {`---
+title: "Solidity Fundamentals for the Certified Ethereum Developer Exam"
+slug: solidity-fundamentals
+certification: certified-ethereum-developer
+domain: Solidity Programming Language
+excerpt: "One or two sentences shown in Google and on blog cards."
+---
+
+Your blog text starts here. Use ## for headings, **bold**, and - for lists.`}
+      </pre>
+      <p style={{ opacity: 0.75 }}>
+        The certification and the domain must already exist, and the domain name must match exactly. Importing creates the
+        blog post and attaches it to that domain, so practice, results and bookmarks link to it.
+      </p>
+
+      <label style={{ display: 'block', margin: '1rem 0' }}>
+        <span style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Choose one or more .md files</span>
+        <input type="file" accept=".md,.markdown,.txt" multiple disabled={Boolean(busy)} onChange={(e) => onFiles(e.target.files)} />
+      </label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', margin: '1rem 0' }}>
+        <label>
+          <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} /> Publish the blogs straight
+          away (untick to save them as drafts)
+        </label>
+        <label>
+          <input type="checkbox" checked={updateExisting} onChange={(e) => setUpdateExisting(e.target.checked)} /> Replace
+          blogs that already exist (same slug) with the uploaded text
+        </label>
+      </div>
+
+      {busy && <p style={{ fontWeight: 600 }}>{busy}</p>}
+      {error && (
+        <p role="alert" style={{ color: '#B42318', fontWeight: 600 }}>
+          {error}
+        </p>
+      )}
+      {results && !busy && (
+        <>
+          <h3 style={{ marginBottom: 0 }}>{done ? 'Import finished' : 'Validation report'}</h3>
+          <Summary results={results} />
+          {!done && (
+            <Button
+              buttonStyle="primary"
+              disabled={importable === 0}
+              onClick={async () => {
+                setError('')
+                setBusy('Importing...')
+                try {
+                  setResults(await send(true))
+                  setDone(true)
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'Import failed.')
+                } finally {
+                  setBusy('')
+                }
+              }}
+            >
+              {importable ? `Import ${importable} blog${importable === 1 ? '' : 's'}` : 'Nothing to import'}
+            </Button>
+          )}
+          <ResultTable results={results} />
+        </>
+      )}
+    </section>
+  )
+}
+
 export function ImporterClient() {
   return (
     <>
+      <section
+        style={{
+          background: 'var(--theme-elevation-50)',
+          borderRadius: '14px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+        }}
+      >
+        <h2 style={{ marginTop: 0, fontSize: '1.1rem' }}>Adding a certification, step by step</h2>
+        <ol style={{ margin: 0, paddingLeft: '1.25rem', lineHeight: 1.7 }}>
+          <li>
+            <strong>Create the certification</strong> under <a href="/admin/collections/certifications">Certifications</a> (or
+            import the list below), and add its <strong>domains</strong> with their weights on the &ldquo;Domains&rdquo; tab.
+          </li>
+          <li>
+            <strong>Upload one blog per domain</strong> in &ldquo;Study-guide blogs&rdquo; below.
+          </li>
+          <li>
+            <strong>Upload the questions</strong> in &ldquo;Practice questions&rdquo; below. Each question&apos;s domain name must match
+            one of the certification&apos;s domains.
+          </li>
+          <li>
+            <strong>Publish the certification</strong> when its questions and blogs are ready. Drafts never show on the site.
+          </li>
+        </ol>
+      </section>
       <ImportCard kind="certifications" />
+      <BlogImportCard />
       <ImportCard kind="questions" />
     </>
   )

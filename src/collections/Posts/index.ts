@@ -14,6 +14,7 @@ import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { Banner } from '../../blocks/Banner/config'
 import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
+import { blogImportEndpoint } from '../../import/endpoints'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
@@ -29,6 +30,11 @@ import { slugField } from 'payload'
 
 export const Posts: CollectionConfig<'posts'> = {
   slug: 'posts',
+  // Blog posts are the study guides: one per certification domain, covering
+  // all of that domain's questions. Upload them from /admin/import or write
+  // them here, then attach each to its domain on the certification.
+  labels: { singular: 'Blog post', plural: 'Blog posts (study guides)' },
+  endpoints: [blogImportEndpoint],
   access: {
     create: authenticated,
     delete: authenticated,
@@ -55,6 +61,7 @@ export const Posts: CollectionConfig<'posts'> = {
       },
     },
     defaultColumns: ['title', 'slug', 'updatedAt'],
+    group: 'Certification Content',
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({

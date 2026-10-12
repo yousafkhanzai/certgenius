@@ -162,8 +162,8 @@ async function loadRows(payload: Payload, ids: number[]): Promise<Map<number, Qu
   return new Map(rows.map((r) => [r.id, r]))
 }
 
-// Study guide for a question: its own blog_post_url when that points at one
-// of our posts, otherwise the post linked to its domain on the certification.
+// Study guide (blog) for a question: the blog linked to its domain on the
+// certification, otherwise its own blog_post_url when that points at one of our posts.
 async function studyGuides(
   payload: Payload,
   rows: QuestionRow[],
@@ -187,16 +187,18 @@ async function studyGuides(
   const result = new Map<number, StudyGuide | null>()
   for (const r of rows) {
     const domainCount = counts.get(r.domain_name || '') || 0
-    const slug = postSlug(r.blog_post_url)
-    if (slug && bySlug.has(slug)) {
-      result.set(r.id, { title: bySlug.get(slug) as string, url: `/posts/${slug}`, domainQuestionCount: domainCount })
-      continue
-    }
-    // The certification is read with public access, so only published
-    // guides are populated here.
+    // Content rule: every domain has one blog that covers all of its
+    // questions, so the domain's blog comes first. (The certification is read
+    // with public access, so only published blogs are populated here.)
     const guide = (cert.domains || []).find((d) => d.name === r.domain_name)?.studyGuide
     if (guide && typeof guide === 'object' && guide.slug) {
       result.set(r.id, { title: guide.title, url: `/posts/${guide.slug}`, domainQuestionCount: domainCount })
+      continue
+    }
+    // Fallback: the question's own blog_post_url, when that post exists.
+    const slug = postSlug(r.blog_post_url)
+    if (slug && bySlug.has(slug)) {
+      result.set(r.id, { title: bySlug.get(slug) as string, url: `/posts/${slug}`, domainQuestionCount: domainCount })
       continue
     }
     result.set(r.id, null)
