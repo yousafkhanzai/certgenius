@@ -9,6 +9,9 @@ import React from 'react'
 const QUIZ_SCREEN = /^(\/certifications\/[^/]+\/(quiz|practice|exam|results)|\/account|\/bookmarks)(\/|$)/
 const FOCUS_SCREEN = /^\/certifications\/[^/]+\/(practice|exam)(\/|$)/
 
+// The admin pattern-lock screen shows nothing but the lock.
+const BARE_SCREEN = /^\/admin-gate(\/|$)/
+
 export function ChromeGate({
   header,
   footer,
@@ -21,9 +24,9 @@ export function ChromeGate({
   const pathname = usePathname() || ''
   return (
     <>
-      {!QUIZ_SCREEN.test(pathname) && header}
+      {!QUIZ_SCREEN.test(pathname) && !BARE_SCREEN.test(pathname) && header}
       {children}
-      {!FOCUS_SCREEN.test(pathname) && footer}
+      {!FOCUS_SCREEN.test(pathname) && !BARE_SCREEN.test(pathname) && footer}
     </>
   )
 }

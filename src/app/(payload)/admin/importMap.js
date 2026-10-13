@@ -30,6 +30,7 @@ import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/component
 import { default as default_19abeeda7b25e283fb50c3b464a5efbd } from '@/components/StaleContentBanner'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
 import { default as default_4e05c94670d65b4ae198fcb24ddf655b } from '@/components/Importer'
+import { default as default_be10fa3e75acca25dc5a0d0cf30c1fc3 } from '@/components/AdminGate'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -66,5 +67,6 @@ export const importMap = {
   "@/components/StaleContentBanner#default": default_19abeeda7b25e283fb50c3b464a5efbd,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
   "@/components/Importer#default": default_4e05c94670d65b4ae198fcb24ddf655b,
+  "@/components/AdminGate#default": default_be10fa3e75acca25dc5a0d0cf30c1fc3,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

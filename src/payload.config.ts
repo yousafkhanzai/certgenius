@@ -23,6 +23,7 @@ import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
 import { quizEndpoints } from './quiz/endpoints'
+import { adminGateEndpoints } from './security/endpoints'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
 
@@ -47,8 +48,7 @@ const trustedOrigins = Array.from(
 export default buildConfig({
   admin: {
     components: {
-      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below.
+      // `BeforeLogin` checks the pattern lock before the login form is shown.
       beforeLogin: ['@/components/BeforeLogin'],
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
@@ -62,6 +62,12 @@ export default buildConfig({
           Component: '@/components/Importer',
           path: '/import',
           meta: { title: 'Import spreadsheets' },
+        },
+        // /admin/security - set or change the pattern lock on the admin.
+        security: {
+          Component: '@/components/AdminGate',
+          path: '/security',
+          meta: { title: 'Admin security' },
         },
       },
     },
@@ -121,7 +127,8 @@ export default buildConfig({
     ProblemReports,
   ],
   // Quiz API: /api/quiz/... (see src/quiz/endpoints.ts).
-  endpoints: quizEndpoints,
+  // Admin pattern lock API: /api/admin-gate/... (see src/security).
+  endpoints: [...quizEndpoints, ...adminGateEndpoints],
   cors: trustedOrigins,
   // Login cookies are only honoured on requests coming from our own site, so
   // another website can't make a visitor's browser act on their account.
