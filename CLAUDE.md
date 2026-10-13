@@ -15,6 +15,12 @@ FIRST: save this whole message as CLAUDE.md in the project root so you remember 
 - We do NOT publish all 169 certifications at once. Certifications are imported as drafts and published one at a time, only when that certification has its questions and study guides ready.
 - Draft certifications must never appear anywhere on the public site: not in listings, counts, search, the sitemap or "Just added". Every public query must read published documents only (overrideAccess: false, no draft flag), and any count/stat must be computed from published certifications only.
 
+=== HARD RULES (never break these) ===
+1. PUBLISHING A CERTIFICATION: a certification can only be published when (a) it has domains, (b) EVERY domain has questions, and (c) EVERY domain has a published blog that covers that domain's questions (one blog per domain). The admin must refuse to publish otherwise and say exactly what is missing.
+2. QUESTION ORDER: never show questions to any student in sheet order or in a fixed sequence. Practice, exam simulation, guest free questions, sample questions and "practice missed" must always be mixed across domains and shuffled, picked at random from the question bank.
+3. CONTENT WORKFLOW: I upload everything manually: the certification with its domains, then the questions for each domain, then one blog per domain. Every certification has domains, every domain has questions, and each domain's blog covers those questions.
+4. PUBLIC CARDS: certification cards show the vendor, the name and a short description only (no question count, domains, time, pass score or exam code). Vendor lists show names only (no counts). Category lists show only categories that have a published certification.
+
 === EXISTING PROJECT ===
 - Next.js 16 + Payload CMS 3 admin, Neon Postgres, deployed on Vercel. Domain is registered at Namecheap.
 - Existing collections: Certifications, Practice Questions, plus blog Posts and Pages from the template.

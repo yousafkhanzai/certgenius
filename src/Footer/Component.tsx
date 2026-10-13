@@ -41,7 +41,7 @@ export async function Footer() {
             <nav aria-label="Categories" className={column}>
               <span className={heading}>Categories</span>
               {categories.map((c) => (
-                <Link key={c.value} href={`/certifications?category=${c.value}`} className={link}>
+                <Link key={c.value} href={`/certifications?category=${encodeURIComponent(c.value)}`} className={link}>
                   {c.label}
                 </Link>
               ))}
@@ -52,7 +52,7 @@ export async function Footer() {
             <Link href="/posts" className={link}>
               Study guides
             </Link>
-            <Link href="/#faq" className={link}>
+            <Link href="/faq" className={link}>
               FAQ
             </Link>
             <Link href="/search" className={link}>

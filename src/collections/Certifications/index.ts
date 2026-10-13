@@ -3,9 +3,10 @@ import { slugField } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
-import { validateHttpUrl } from '../../access/roles'
+import { adminOnlyField, validateHttpUrl } from '../../access/roles'
 import { certificationImportEndpoint } from '../../import/endpoints'
 import { AFFILIATE_TYPES, CERT_CATEGORIES, CERT_STATUSES } from './options'
+import { enforcePublishRule } from './publishRule'
 
 // This collection is where you publish each certification that visitors can study for.
 // Every field here shows up as a simple form field in the admin dashboard -
@@ -123,8 +124,11 @@ export const Certifications: CollectionConfig = {
                 {
                   name: 'examCode',
                   type: 'text',
+                  // Admin only: hidden from the public API as well as the pages.
+                  access: { read: adminOnlyField },
                   admin: {
-                    description: 'e.g. "AIF-C01". Use our own code (e.g. "BC-CED") if the vendor has none.',
+                    description:
+                      'For the admin only: never shown on the public site. e.g. "AIF-C01", or our own code (e.g. "BC-CED") if the vendor has none.',
                   },
                 },
               ],
@@ -132,6 +136,7 @@ export const Certifications: CollectionConfig = {
             {
               name: 'isSiteCode',
               type: 'checkbox',
+              access: { read: adminOnlyField },
               label: 'This is a CertGenius code (the vendor has no official exam code)',
               defaultValue: false,
             },
@@ -175,8 +180,11 @@ export const Certifications: CollectionConfig = {
             {
               name: 'summary',
               type: 'textarea',
+              label: 'Short description',
+              maxLength: 240,
               admin: {
-                description: 'Short 1-2 sentence summary shown on listing cards.',
+                description:
+                  'One or two sentences on what students will practise here. Shown on the certification card and at the top of its page.',
               },
             },
             {
@@ -377,6 +385,10 @@ export const Certifications: CollectionConfig = {
       admin: { hidden: true },
     },
   ],
+  hooks: {
+    // HARD RULE: no publishing without domains, questions and a blog per domain.
+    beforeChange: [enforcePublishRule],
+  },
   versions: {
     drafts: {
       autosave: { interval: 100 },

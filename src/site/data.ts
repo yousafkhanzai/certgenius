@@ -10,13 +10,12 @@ import { pool } from '@/quiz/server'
 // from PUBLISHED certifications that are visible in listings (not Retired or
 // On hold). Draft certifications never appear in any list, count or stat.
 
+// Exam codes are for the admin only, so they are deliberately not part of this public data.
 export type CertCard = {
   id: number
   title: string
   slug: string
   vendor: string | null
-  examCode: string | null
-  isSiteCode: boolean
   category: CertCategory | null
   status: Certification['examStatus']
   summary: string | null
@@ -56,8 +55,6 @@ export const listedCertifications = cache(async (): Promise<CertCard[]> => {
     title: c.title,
     slug: c.slug as string,
     vendor: c.vendor ?? null,
-    examCode: c.examCode ?? null,
-    isSiteCode: Boolean(c.isSiteCode),
     category: (c.certCategory as CertCategory | null) ?? null,
     status: c.examStatus,
     summary: c.summary ?? null,

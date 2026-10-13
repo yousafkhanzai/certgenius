@@ -29,7 +29,6 @@ import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
-import { JsonLd } from '@/components/JsonLd'
 import { CertCardView, ComingSoonCard } from '@/components/Home/CertCardView'
 import { HOME_FAQ } from '@/components/Home/faq'
 import { TryQuestion } from '@/components/Home/TryQuestion'
@@ -89,7 +88,7 @@ async function tryQuestion(slug: string | undefined) {
   const pick = ids[Math.floor(Date.now() / 86_400_000) % ids.length]
   const [question] = await publicQuestions(payload, [pick], cert)
   if (!question) return null
-  return { question: { ...question, hint: null }, cert: { slug: cert.slug as string, title: cert.title, examCode: cert.examCode ?? null } }
+  return { question: { ...question, hint: null }, cert: { slug: cert.slug as string, title: cert.title } }
 }
 
 export default async function HomePage() {
@@ -107,18 +106,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          mainEntity: HOME_FAQ.flatMap((g) => g.items).map((f) => ({
-            '@type': 'Question',
-            name: f.q,
-            acceptedAnswer: { '@type': 'Answer', text: f.a },
-          })),
-        }}
-      />
-
       {/* Hero */}
       <section className="bg-hero text-white">
         <div
@@ -176,9 +163,10 @@ export default async function HomePage() {
               View all certifications
             </Link>
           </div>
-          <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))]">
+          {/* Always a row: three across on desktop, a sideways-swipe row on phones and tablets. */}
+          <div className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
             {data.popular.map((c) => (
-              <CertCardView key={c.id} cert={c} />
+              <CertCardView key={c.id} cert={c} className="w-[82%] flex-none snap-start sm:w-[46%] lg:w-auto" />
             ))}
           </div>
         </section>
@@ -215,59 +203,47 @@ export default async function HomePage() {
             {data.vendors.map((v) => (
               <Link
                 key={v.name}
-                href={`/certifications#vendor-${v.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-3.5 text-card-foreground no-underline hover:border-primary hover:text-card-foreground"
+                href={`/certifications?vendor=${encodeURIComponent(v.name)}`}
+                className="rounded-2xl border border-border bg-card px-5 py-3.5 text-base font-bold text-card-foreground no-underline hover:border-primary hover:text-primary"
               >
-                <span className="text-base font-bold">{v.name}</span>
-                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[13px] font-semibold text-muted-foreground">
-                  {v.count} certification{v.count === 1 ? '' : 's'}
-                </span>
+                {v.name}
               </Link>
             ))}
           </div>
         </section>
       )}
 
-      {/* Browse by category */}
-      <section className="border-y border-border bg-card">
-        <div className={`${container} flex flex-col gap-8 py-16`}>
-          <div className="flex flex-col gap-2">
-            <span className={eyebrow}>Categories</span>
-            <h2 className={sectionTitle}>Browse by category</h2>
+      {/* Browse by category: only categories that have a published certification.
+          A new category appears here by itself when its first certification is published. */}
+      {data.categories.some((c) => c.count > 0) && (
+        <section className="border-y border-border bg-card">
+          <div className={`${container} flex flex-col gap-8 py-16`}>
+            <div className="flex flex-col gap-2">
+              <span className={eyebrow}>Categories</span>
+              <h2 className={sectionTitle}>Browse by category</h2>
+            </div>
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))]">
+              {data.categories
+                .filter((c) => c.count > 0)
+                .map((c) => {
+                  const Icon = CATEGORY_ICONS[c.value] || Layers
+                  return (
+                    <Link
+                      key={c.value}
+                      href={`/certifications?category=${c.value}`}
+                      className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-foreground no-underline hover:border-primary hover:text-foreground"
+                    >
+                      <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <span className="text-[15px] font-bold leading-snug">{c.label}</span>
+                    </Link>
+                  )
+                })}
+            </div>
           </div>
-          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))]">
-            {data.categories.map((c) => {
-              const Icon = CATEGORY_ICONS[c.value] || Layers
-              const inner = (
-                <>
-                  <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="text-[15px] font-bold leading-snug">{c.label}</span>
-                    <span className="text-[13px] text-muted-foreground">
-                      {c.count ? `${c.count} certification${c.count === 1 ? '' : 's'}` : 'Coming soon'}
-                    </span>
-                  </span>
-                </>
-              )
-              return c.count ? (
-                <Link
-                  key={c.value}
-                  href={`/certifications#${c.value}`}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-foreground no-underline hover:border-primary hover:text-foreground"
-                >
-                  {inner}
-                </Link>
-              ) : (
-                <div key={c.value} className="flex items-center gap-3 rounded-2xl border border-dashed border-border p-4 opacity-70">
-                  {inner}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Built to mirror the real exam */}
       <section className={`${container} flex flex-col gap-8 py-16`}>
@@ -337,15 +313,20 @@ export default async function HomePage() {
 
       {/* FAQ */}
       <section id="faq" className={`${container} flex scroll-mt-24 flex-col gap-8 py-16`}>
-        <div className="flex flex-col gap-2">
-          <span className={eyebrow}>FAQ</span>
-          <h2 className={sectionTitle}>Questions, answered</h2>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <span className={eyebrow}>FAQ</span>
+            <h2 className={sectionTitle}>Questions, answered</h2>
+          </div>
+          <Link href="/faq" className="text-[15px] font-semibold text-primary no-underline hover:text-primary-hover">
+            All questions and answers
+          </Link>
         </div>
         <div className="grid gap-8 lg:grid-cols-3">
           {HOME_FAQ.map((group) => (
             <div key={group.group} className="flex flex-col gap-3">
               <h3 className="m-0 text-[17px] font-bold">{group.group}</h3>
-              {group.items.map((item) => (
+              {group.items.slice(0, 3).map((item) => (
                 <details key={item.q} className="group rounded-2xl border border-border bg-card px-5 py-4">
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-3 text-[15px] font-semibold marker:hidden [&::-webkit-details-marker]:hidden">
                     {item.q}

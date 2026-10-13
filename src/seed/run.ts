@@ -162,7 +162,9 @@ export async function seedContent(payload: Payload) {
       found.docs[0] ||
       (await payload.create({
         collection: 'certifications',
-        data: { ...cert, _status: 'published' },
+        // Drafts: publishing needs domains, questions and a blog per domain.
+        data: { ...cert, _status: 'draft' },
+        draft: true,
       }))
   }
   payload.logger.info('Certifications ready.')

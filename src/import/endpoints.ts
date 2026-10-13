@@ -115,7 +115,9 @@ export const questionImportEndpoint = importEndpoint(
 export const certificationImportEndpoint = importEndpoint(CERT_COLUMNS, async (req, rows, body) => {
   if (body.commit === true) {
     return importCertificationRows(req, rows, {
-      publish: body.publish === true,
+      // Always drafts: a certification is published by hand once its domains,
+      // questions and blogs are in place (publishing rule).
+      publish: false,
       updateExisting: body.updateExisting === true,
     })
   }

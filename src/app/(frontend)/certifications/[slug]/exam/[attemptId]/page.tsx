@@ -48,7 +48,7 @@ export default async function ExamPage({ params }: Args) {
   return (
     <ExamSession
       attemptId={attempt.id}
-      cert={{ slug: cert.slug as string, title: cert.title, examCode: cert.examCode ?? null }}
+      cert={{ slug: cert.slug as string, title: cert.title }}
       questions={examQuestions}
       initialResponses={(attempt.responses || {}) as ExamResponses}
       initialIndex={attempt.current_index || 0}

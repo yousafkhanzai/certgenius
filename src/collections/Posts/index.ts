@@ -93,6 +93,8 @@ export const Posts: CollectionConfig<'posts'> = {
               name: 'heroImage',
               type: 'upload',
               relationTo: 'media',
+              // Blog posts don't use images; the field stays so no data is dropped.
+              admin: { hidden: true },
             },
             {
               name: 'content',

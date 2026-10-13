@@ -3,11 +3,9 @@ import { cn } from '@/utilities/ui'
 import useClickableCard from '@/utilities/useClickableCard'
 import Link from 'next/link'
 import React, { Fragment } from 'react'
-import { ArrowRight, FileText } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 import type { Post } from '@/payload-types'
-
-import { Media } from '@/components/Media'
 
 export type CardPostData = Pick<Post, 'slug' | 'categories' | 'meta' | 'title'>
 
@@ -23,7 +21,7 @@ export const Card: React.FC<{
   const { className, doc, relationTo, showCategories, title: titleFromProps } = props
 
   const { slug, categories, meta, title } = doc || {}
-  const { description, image: metaImage } = meta || {}
+  const { description } = meta || {}
 
   const hasCategories = categories && Array.isArray(categories) && categories.length > 0
   const titleToUse = titleFromProps || title
@@ -38,14 +36,7 @@ export const Card: React.FC<{
       )}
       ref={card.ref}
     >
-      <div className="relative w-full aspect-[16/10] bg-accent">
-        {!metaImage && (
-          <div className="w-full h-full flex items-center justify-center">
-            <FileText className="w-10 h-10 text-primary/40" strokeWidth={1.5} />
-          </div>
-        )}
-        {metaImage && typeof metaImage !== 'string' && <Media resource={metaImage} size="33vw" />}
-      </div>
+      {/* Blog cards are text only: study guides don't use images. */}
       <div className="p-6">
         {showCategories && hasCategories && (
           <div className="uppercase text-xs font-bold tracking-wide text-muted-foreground mb-3">
@@ -82,7 +73,7 @@ export const Card: React.FC<{
           </p>
         )}
         <div className="flex items-center gap-1.5 text-sm font-semibold text-primary mt-4 group-hover:gap-2.5 transition-all">
-          Read article
+          Read the guide
           <ArrowRight className="w-4 h-4" />
         </div>
       </div>

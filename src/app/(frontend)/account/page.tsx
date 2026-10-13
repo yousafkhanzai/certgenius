@@ -195,9 +195,6 @@ export default async function AccountPage({ searchParams }: Args) {
               <article key={cert.id} className={`${card} flex flex-col gap-6 p-6 shadow-none`}>
                 <div className="flex flex-wrap items-center justify-between gap-5">
                   <div className="flex flex-col gap-1.5">
-                    {cert.examCode && (
-                      <span className="w-fit rounded-md bg-[#0B1220] px-2 py-1 font-mono text-xs font-semibold text-white">{cert.examCode}</span>
-                    )}
                     <h3 className="m-0 text-xl font-bold leading-snug">{cert.title}</h3>
                     <span className="text-sm text-[#475467]">
                       {practised} question{practised === 1 ? '' : 's'} practised

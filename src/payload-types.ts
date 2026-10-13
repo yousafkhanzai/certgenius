@@ -861,7 +861,7 @@ export interface Certification {
    */
   vendor?: string | null;
   /**
-   * e.g. "AIF-C01". Use our own code (e.g. "BC-CED") if the vendor has none.
+   * For the admin only: never shown on the public site. e.g. "AIF-C01", or our own code (e.g. "BC-CED") if the vendor has none.
    */
   examCode?: string | null;
   isSiteCode?: boolean | null;
@@ -874,7 +874,7 @@ export interface Certification {
   delivery?: string | null;
   officialUrl?: string | null;
   /**
-   * Short 1-2 sentence summary shown on listing cards.
+   * One or two sentences on what students will practise here. Shown on the certification card and at the top of its page.
    */
   summary?: string | null;
   heroImage?: (number | null) | Media;

@@ -81,10 +81,25 @@ export async function domainQuestionCounts(payload: Payload, certId: number): Pr
 const PLAYABLE = `option_a is not null and option_b is not null and option_c is not null
   and option_d is not null and correct_answer is not null`
 
-// Guests may only ever see these: the first 10 questions of a certification.
+// HARD RULE: questions are never shown in sheet order. Every list of
+// questions handed to a student is shuffled.
+export function shuffle<T>(items: T[]): T[] {
+  const list = [...items]
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[list[i], list[j]] = [list[j], list[i]]
+  }
+  return list
+}
+
+// Guests may only ever see these 10 questions of a certification. They are a
+// fixed sample (so a guest can't keep reloading to read the whole bank) but
+// NOT the first rows of the sheet: ordering by a hash of the id spreads them
+// across the whole bank and its domains. Callers shuffle the order they show.
 export async function guestQuestionIds(payload: Payload, certId: number): Promise<number[]> {
   const { rows } = await pool(payload).query<{ id: number }>(
-    `select id from questions where certification_id = $1 and ${PLAYABLE} order by id limit $2`,
+    `select id from questions where certification_id = $1 and ${PLAYABLE}
+     order by md5(id::text || ':' || certification_id::text) limit $2`,
     [certId, GUEST_FREE_QUESTIONS],
   )
   return rows.map((r) => r.id)
@@ -142,11 +157,7 @@ export async function pickExamQuestions(payload: Payload, cert: Certification): 
   if (picked.length < target) {
     picked.push(...(await pickPracticeQuestions(payload, certId, null, target - picked.length, picked)))
   }
-  for (let i = picked.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[picked[i], picked[j]] = [picked[j], picked[i]]
-  }
-  return picked
+  return shuffle(picked)
 }
 
 // ---------- question data ----------

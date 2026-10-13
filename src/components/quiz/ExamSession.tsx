@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight, CrossOutIcon, Kbd, LogoMark, TimerIcon, card
 
 type Props = {
   attemptId: number
-  cert: { slug: string; title: string; examCode: string | null }
+  cert: { slug: string; title: string }
   questions: PublicQuestion[]
   initialResponses: ExamResponses
   initialIndex: number
@@ -247,7 +247,7 @@ export function ExamSession(props: Props) {
             <LogoMark />
             <div className="flex flex-col">
               <span className="text-[15px] font-bold tracking-[-0.01em]">{cert.title}</span>
-              <span className="text-[13px] text-[#475467]">Exam simulation{cert.examCode ? ` · ${cert.examCode}` : ''}</span>
+              <span className="text-[13px] text-[#475467]">Exam simulation</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">

@@ -103,14 +103,6 @@ export default async function QuizStartPage({ params, searchParams }: Args) {
         <section className="flex flex-wrap items-stretch gap-6">
           <div className="flex min-w-0 flex-[999_1_560px] flex-col justify-center gap-3.5">
             <div className="flex flex-wrap items-center gap-2">
-              {cert.examCode && (
-                <span
-                  className="rounded-md bg-[#0B1220] px-[9px] py-[5px] font-mono text-xs font-semibold text-white"
-                  title={cert.isSiteCode ? 'CertGenius code (the vendor has no official exam code)' : 'Official exam code'}
-                >
-                  {cert.examCode}
-                </span>
-              )}
               <span className="text-[13px] font-medium text-[#475467]">
                 {[cert.vendor, `${totalQuestions} questions`, `${domains.length} domains`, `Updated ${updated}`]
                   .filter(Boolean)

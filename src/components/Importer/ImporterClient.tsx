@@ -138,7 +138,7 @@ function ImportCard({ kind }: { kind: Kind }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
   const [done, setDone] = useState(false)
-  const [publish, setPublish] = useState(false)
+  const publish = false // certifications are always imported as drafts (publishing rule)
   const [updateExisting, setUpdateExisting] = useState(false)
 
   const runBatches = async (items: ImportRow[], extra: Record<string, boolean>, verb: string) => {
@@ -239,10 +239,10 @@ function ImportCard({ kind }: { kind: Kind }) {
 
       {kind === 'certifications' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', margin: '1rem 0' }}>
-          <label>
-            <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} /> Publish new
-            certifications straight away (otherwise they're saved as drafts)
-          </label>
+          <p style={{ margin: 0, opacity: 0.75 }}>
+            Imported certifications are always saved as <strong>drafts</strong>. A certification can only be published once
+            it has domains, every domain has questions, and every domain has a published blog.
+          </p>
           <label>
             <input type="checkbox" checked={updateExisting} onChange={(e) => setUpdateExisting(e.target.checked)} />{' '}
             Update exam code, vendor, category and status of certifications that already exist (saved as drafts

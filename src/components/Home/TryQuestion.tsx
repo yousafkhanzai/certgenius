@@ -7,7 +7,7 @@ import type { Feedback, Letter, PublicQuestion } from '@/quiz/types'
 
 // Homepage "Try a question" card: a real question from a certification's free
 // questions, answerable without logging in, with a ticking timer.
-export function TryQuestion({ question, cert }: { question: PublicQuestion; cert: { slug: string; title: string; examCode: string | null } }) {
+export function TryQuestion({ question, cert }: { question: PublicQuestion; cert: { slug: string; title: string } }) {
   const [seconds, setSeconds] = useState(0)
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [busy, setBusy] = useState(false)
@@ -46,8 +46,8 @@ export function TryQuestion({ question, cert }: { question: PublicQuestion; cert
     <section aria-label="Try a question" className="flex flex-col gap-4 rounded-[24px] bg-white p-5 text-[#0B1220] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.5)] sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <span className="flex min-w-0 items-center gap-2">
-          {cert.examCode && <span className="flex-none rounded-md bg-[#0B1220] px-2 py-1 font-mono text-xs font-semibold text-white">{cert.examCode}</span>}
-          <span className="truncate text-[13px] font-semibold text-[#475467]">{question.domain}</span>
+          <span className="truncate text-[13px] font-bold text-[#0B1220]">{cert.title}</span>
+          <span className="hidden truncate text-[13px] font-medium text-[#475467] sm:inline">· {question.domain}</span>
         </span>
         <span role="timer" aria-label={`Time on this question ${clock}`} className="flex-none rounded-lg bg-[#F2F4F7] px-2.5 py-1 font-mono text-sm font-semibold">
           {clock}

@@ -18,6 +18,7 @@ import {
   pool,
   publicQuestions,
   recordAnswers,
+  shuffle,
   withTransaction,
   correctAnswers,
 } from './server'
@@ -125,7 +126,7 @@ const practiceStart = endpoint('/quiz/practice/start', async (req) => {
       certificationId: certId,
       mode: 'practice',
       domainFilter: 'Missed questions',
-      questionIds: missed,
+      questionIds: shuffle(missed), // never in the exam's order
       deadline: null,
     })
     return json({ attemptId })

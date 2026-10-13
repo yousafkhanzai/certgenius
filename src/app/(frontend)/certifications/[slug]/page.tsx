@@ -118,7 +118,6 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
 
   const glance = [
     ['Vendor', cert.vendor],
-    ['Exam code', cert.examCode ? `${cert.examCode}${cert.isSiteCode ? ' (CertGenius code)' : ''}` : null],
     ['Questions', cert.examQuestionCount ? String(cert.examQuestionCount) : null],
     ['Time limit', cert.durationMinutes ? `${cert.durationMinutes} minutes` : null],
     ['Pass score', cert.passingScore ? `${cert.passingScore}%` : null],
@@ -134,7 +133,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
           slug: cert.slug || decodedSlug,
           summary: cert.summary,
           vendor: cert.vendor,
-          examCode: cert.examCode,
+          // Exam codes are for the admin only and are not published.
         })}
       />
       <JsonLd
@@ -169,7 +168,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
               {category && (
                 <>
                   <span aria-hidden="true">/</span>
-                  <Link href={`/certifications#${category.value}`} className="text-hero-muted no-underline hover:text-white">
+                  <Link href={`/certifications?category=${category.value}`} className="text-hero-muted no-underline hover:text-white">
                     {category.label}
                   </Link>
                 </>
@@ -178,14 +177,6 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
               <span className="text-white">{cert.title}</span>
             </nav>
             <div className="flex flex-wrap items-center gap-2">
-              {cert.examCode && (
-                <span
-                  className="rounded-md bg-white px-2 py-1 font-mono text-xs font-semibold text-[#0B1220]"
-                  title={cert.isSiteCode ? 'CertGenius code (the vendor has no official exam code)' : 'Official exam code'}
-                >
-                  {cert.examCode}
-                </span>
-              )}
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-bold ${retired ? 'bg-[#FEE4E2] text-[#912018]' : 'bg-mint text-mint-foreground'}`}
               >
@@ -280,7 +271,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
         {/* About the exam */}
         {about && (
           <section id="about" className={sectionClass}>
-            <h2 className={h2}>About the {cert.examCode || cert.title} exam</h2>
+            <h2 className={h2}>About the {cert.title} exam</h2>
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
               <div className="flex min-w-0 flex-col gap-6">
                 {cert.overview && <RichText data={cert.overview} enableGutter={false} className="mx-0" />}
@@ -511,7 +502,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
                       <span className="sr-only">Feature</span>
                     </th>
                     <th scope="col" className="px-5 py-3.5 font-bold">
-                      {cert.examCode || cert.title}
+                      {cert.title}
                     </th>
                     <th scope="col" className="px-5 py-3.5 font-bold">
                       {cert.comparedExamName || 'Compared exam'}
@@ -621,8 +612,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
         )}
 
         <p className="m-0 border-t border-border pt-6 text-[13px] leading-relaxed text-muted-foreground">
-          CertGenius is not affiliated with or endorsed by {cert.vendor || 'the exam vendor'}. {cert.title}
-          {cert.examCode && !cert.isSiteCode ? ` and ${cert.examCode}` : ''} are trademarks of their respective owner. Practice
+          CertGenius is not affiliated with or endorsed by {cert.vendor || 'the exam vendor'}. {cert.title} is a trademark of its respective owner. Practice
           questions are original and written from the published exam objectives.
         </p>
       </div>
@@ -634,7 +624,7 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
   const { slug = '' } = await paramsPromise
   const cert = await queryCertificationBySlug({ slug: decodeURIComponent(slug) })
   if (!cert) return { title: 'Certification | CertGenius' }
-  const title = `${cert.title}${cert.examCode && !cert.isSiteCode ? ` (${cert.examCode})` : ''} practice exams | CertGenius`
+  const title = `${cert.title} practice exams | CertGenius`
   const description =
     cert.summary || `Free ${cert.title} practice questions, exam simulations and study guides, with every answer explained.`
   const url = `${getServerSideURL()}/certifications/${cert.slug}`

@@ -223,17 +223,24 @@ for (const spec of certSpecs) {
   console.log(`      published: ${existing?._status === 'published' ? 'already' : 'yes (will publish)'}`)
   if (!apply) continue
 
+  // Saved without publishing: the certification is published at the end,
+  // once its questions are in, so it passes the publishing rule.
   const data = {
     ...changes,
     title: existing?.title || spec.title,
     slug: spec.slug,
     domains: spec.domains.map((d) => ({ name: d.name, weight: d.weight, studyGuide: postIds.get(d.guideSlug) })),
-    _status: 'published' as const,
   }
   if (existing) {
-    await payload.update({ collection: 'certifications', id: existing.id, data, context: ctx })
+    await payload.update({
+      collection: 'certifications',
+      id: existing.id,
+      data,
+      draft: existing._status !== 'published',
+      context: ctx,
+    })
   } else {
-    await payload.create({ collection: 'certifications', data, context: ctx })
+    await payload.create({ collection: 'certifications', data: { ...data, _status: 'draft' }, draft: true, context: ctx })
   }
 }
 
@@ -289,8 +296,11 @@ for (const file of questionFiles) {
 
 // ---------- 5. Extra certifications to publish ----------
 
-if (publishSlugs.length) console.log('\n== Publish')
-for (const slug of publishSlugs) {
+// The pack's own certifications are published last, after their blogs and
+// questions exist. The publishing rule refuses any that are still incomplete.
+const toPublish = Array.from(new Set([...certSpecs.map((c) => c.slug), ...publishSlugs]))
+if (toPublish.length) console.log('\n== Publish')
+for (const slug of toPublish) {
   const doc = (await payload.find({ collection: 'certifications', where: { slug: { equals: slug } }, draft: true, limit: 1, depth: 0 })).docs[0]
   if (!doc) {
     console.log(`  ${slug}: not found`)
@@ -301,7 +311,12 @@ for (const slug of publishSlugs) {
     continue
   }
   console.log(`  publish ${doc.title}`)
-  if (apply) await payload.update({ collection: 'certifications', id: doc.id, data: { _status: 'published' }, context: ctx })
+  if (!apply) continue
+  try {
+    await payload.update({ collection: 'certifications', id: doc.id, data: { _status: 'published' }, context: ctx })
+  } catch (err) {
+    console.log(`    NOT published: ${err instanceof Error ? err.message : err}`)
+  }
 }
 
 // ---------- 6. Summary ----------

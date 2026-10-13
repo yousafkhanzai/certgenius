@@ -6,7 +6,15 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { PracticeSession } from '@/components/quiz/PracticeSession'
-import { feedbackFor, getOwnAttempt, getPublishedCertification, guestQuestionIds, pool, publicQuestions } from '@/quiz/server'
+import {
+  feedbackFor,
+  getOwnAttempt,
+  getPublishedCertification,
+  guestQuestionIds,
+  pool,
+  publicQuestions,
+  shuffle,
+} from '@/quiz/server'
 import type { PracticeResponses } from '@/quiz/types'
 import { getStudent } from '@/utilities/getStudent'
 
@@ -62,7 +70,8 @@ export default async function PracticePage({ params, searchParams }: Args) {
     finished = attempt.status !== 'in-progress'
     modeLabel = `Practice · ${attempt.domain_filter || 'All domains'}`
   } else {
-    questionIds = await guestQuestionIds(payload, Number(cert.id))
+    // Shuffled on every visit: guests never get a fixed sequence.
+    questionIds = shuffle(await guestQuestionIds(payload, Number(cert.id)))
     modeLabel = 'Practice · Free questions'
   }
 

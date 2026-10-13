@@ -9,9 +9,8 @@ import { ThemeToggle } from './ThemeToggle'
 
 const NAV = [
   { href: '/certifications', label: 'Certifications' },
-  { href: '/#vendors', label: 'Vendors' },
   { href: '/posts', label: 'Study guides' },
-  { href: '/#faq', label: 'FAQ' },
+  { href: '/faq', label: 'FAQ' },
 ]
 
 export function LogoLink({ onDark = false }: { onDark?: boolean }) {
