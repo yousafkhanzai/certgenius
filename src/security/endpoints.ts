@@ -20,9 +20,10 @@ async function body(req: PayloadRequest): Promise<Json> {
   return (req.data && typeof req.data === 'object' ? req.data : {}) as Json
 }
 
-const passed = (data: Json = {}) => {
+// withPass: also give this browser a one-time pass to the login page.
+const passed = async (req: PayloadRequest, withPass: boolean, data: Json = {}) => {
   const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store' })
-  headers.append('Set-Cookie', gatePassCookie())
+  if (withPass) headers.append('Set-Cookie', await gatePassCookie(req.payload))
   headers.append('Set-Cookie', knownDeviceCookie())
   return new Response(JSON.stringify({ ok: true, ...data }), { status: 200, headers })
 }
@@ -48,7 +49,7 @@ export const adminGateEndpoints: Endpoint[] = [
   endpoint('/admin-gate/verify', async (req) => {
     const { pattern } = await body(req)
     const attempt = await tryGatePattern(req.payload, pattern, requestAddress(req.headers), req.headers.get('cookie'))
-    return attempt.ok ? passed() : refused(attempt)
+    return attempt.ok ? passed(req, true) : refused(attempt)
   }),
 
   // Set or change the pattern: logged-in admin only, and changing it needs the
@@ -65,6 +66,7 @@ export const adminGateEndpoints: Endpoint[] = [
     }
     await setGatePattern(req.payload, pattern)
     req.payload.logger.warn(`Admin gate: pattern set by admin #${req.user?.id}`)
-    return passed()
+    // Already logged in: no pass needed. The next login asks for the new pattern.
+    return passed(req, false)
   }),
 ]

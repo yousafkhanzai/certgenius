@@ -1,7 +1,7 @@
 import { APIError, ValidationError, type CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
-import { gateIsOpen } from '../../security/adminGate'
+import { consumeGatePass, gateIsOpen } from '../../security/adminGate'
 
 // Admin password rule: long and mixed, so it can't be guessed or brute-forced.
 export const ADMIN_PASSWORD_MIN = 14
@@ -66,6 +66,13 @@ export const Users: CollectionConfig = {
         if (!(await gateIsOpen(req.payload, req.headers?.get('cookie')))) {
           throw new APIError('Draw your admin pattern first, at /admin-gate.', 403, undefined, true)
         }
+      },
+    ],
+    // The pattern pass works for ONE login: after logging in (or out and back
+    // in) the pattern must be drawn again.
+    afterLogin: [
+      async ({ req }) => {
+        if (req.payloadAPI !== 'local') await consumeGatePass(req.payload, req.headers?.get('cookie'))
       },
     ],
     beforeValidate: [

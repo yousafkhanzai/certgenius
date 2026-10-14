@@ -8,7 +8,9 @@ import type { Payload } from 'payload'
 //   - The login page redirects to /admin-gate until the pattern is entered.
 //   - The login API itself refuses to log anyone in without the gate pass, so
 //     knowing the password alone is not enough.
-//   - Passing the gate sets a signed, HttpOnly cookie that lasts 12 hours.
+//   - Passing the gate gives this browser a ONE-TIME pass (signed, HttpOnly
+//     cookie, 15 minutes) that is used up by the next successful login - so
+//     the pattern is asked again before every login, including after log out.
 //   - Wrong patterns are counted: 5 from one address locks that address out
 //     for 15 minutes, and 25 in an hour from anywhere locks the gate for an hour.
 //
@@ -19,7 +21,8 @@ import type { Payload } from 'payload'
 export const GATE_COOKIE = 'cg_gate'
 export const KNOWN_COOKIE = 'cg_known'
 const KNOWN_DAYS = 365
-const PASS_HOURS = 12
+const PASS_MINUTES = 15
+const PASS_PREFIX = 'admin-gate:pass:'
 const CONFIG_KEY = 'admin-gate:config'
 const PER_ADDRESS_LIMIT = 5
 const PER_ADDRESS_LOCK_MS = 15 * 60 * 1000
@@ -61,10 +64,37 @@ export async function clearGatePattern(payload: Payload): Promise<void> {
 const sign = (expires: number, purpose = 'admin-gate') =>
   createHmac('sha256', secret()).update(`${purpose}|${expires}`).digest('hex')
 
-export function gatePassCookie(): string {
-  const expires = Date.now() + PASS_HOURS * 60 * 60 * 1000
+// Issues a one-time pass: the cookie names a random ticket that is also saved
+// on the server, and the ticket is deleted when it is used for a login.
+export async function gatePassCookie(payload: Payload): Promise<string> {
+  const expires = Date.now() + PASS_MINUTES * 60 * 1000
+  const ticket = randomBytes(16).toString('hex')
+  await payload.kv.set(`${PASS_PREFIX}${ticket}`, { expires })
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  return `${GATE_COOKIE}=${expires}.${sign(expires)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${PASS_HOURS * 60 * 60}${secure}`
+  return `${GATE_COOKIE}=${expires}.${ticket}.${sign(expires, `admin-gate|${ticket}`)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${PASS_MINUTES * 60}${secure}`
+}
+
+const passTicket = (cookieValue: string | undefined | null): string | null => {
+  if (!cookieValue) return null
+  const [expiresRaw, ticket, signature] = cookieValue.split('.')
+  if (!ticket || !/^[0-9a-f]{32}$/.test(ticket)) return null
+  return hasValidGatePass(`${expiresRaw}.${signature}`, `admin-gate|${ticket}`) ? ticket : null
+}
+
+// Uses up this browser's pass (called after a successful login), and clears
+// out any old passes that were never used.
+export async function consumeGatePass(payload: Payload, cookieHeader: string | null | undefined): Promise<void> {
+  const ticket = passTicket(cookieFromHeader(cookieHeader, GATE_COOKIE))
+  if (ticket) await payload.kv.delete(`${PASS_PREFIX}${ticket}`)
+  for (const key of await payload.kv.keys()) {
+    if (!key.startsWith(PASS_PREFIX)) continue
+    const pass = await payload.kv.get<{ expires: number }>(key)
+    if (!pass || pass.expires < Date.now()) await payload.kv.delete(key)
+  }
+}
+
+export function clearGateCookie(): string {
+  return `${GATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
 }
 
 // A long-lived marker for a browser that has entered the right pattern before.
@@ -104,7 +134,8 @@ export function cookieFromHeader(header: string | null | undefined, name: string
 export async function gateIsOpen(payload: Payload, cookieHeader: string | null | undefined): Promise<boolean> {
   const config = await gateConfig(payload)
   if (!config) return true
-  return hasValidGatePass(cookieFromHeader(cookieHeader, GATE_COOKIE))
+  const ticket = passTicket(cookieFromHeader(cookieHeader, GATE_COOKIE))
+  return Boolean(ticket && (await payload.kv.get(`${PASS_PREFIX}${ticket}`)))
 }
 
 // ---------- checking a drawn pattern ----------

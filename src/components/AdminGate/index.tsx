@@ -51,7 +51,8 @@ export default async function SecurityView({ initPageResult, params, searchParam
             symbol. Change it under Users &gt; your account.
           </li>
           <li>5 wrong passwords or 5 wrong patterns lock the door for 15 minutes.</li>
-          <li>You are logged out automatically after 2 hours, and the pattern is asked again after 12 hours.</li>
+          <li>The pattern is asked before every login, including after you log out.</li>
+          <li>You are logged out automatically after 2 hours.</li>
           <li>No new admin accounts can be created, even by a logged-in admin.</li>
         </ul>
       </Gutter>
