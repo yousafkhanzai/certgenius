@@ -37,6 +37,8 @@ export const Pages: CollectionConfig<'pages'> = {
     slug: true,
   },
   admin: {
+    // Not used by CertGenius; hidden from the admin menu (data is kept).
+    hidden: true,
     components: {
       edit: {
         // Shows a "this is 3+ months old" reminder right on the edit screen.

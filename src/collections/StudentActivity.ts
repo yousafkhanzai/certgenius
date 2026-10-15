@@ -34,6 +34,8 @@ export const Attempts: CollectionConfig = {
   },
   admin: {
     group: 'Students',
+    // Raw records; the admin's Site stats page summarises them.
+    hidden: true,
     defaultColumns: ['student', 'certification', 'mode', 'status', 'scorePercent', 'startedAt'],
   },
   indexes: [{ fields: ['student', 'certification'] }],
@@ -88,6 +90,7 @@ export const AttemptAnswers: CollectionConfig = {
   },
   admin: {
     group: 'Students',
+    hidden: true,
     defaultColumns: ['student', 'question', 'chosen', 'isCorrect', 'answeredAt'],
   },
   // Mastery = "correct the last 2 times" per question, looked up per student.
@@ -117,6 +120,7 @@ export const Bookmarks: CollectionConfig = {
   },
   admin: {
     group: 'Students',
+    hidden: true,
     defaultColumns: ['student', 'question', 'certification', 'createdAt'],
   },
   indexes: [{ fields: ['student', 'question'], unique: true }],
@@ -166,6 +170,7 @@ export const AnswerStats: CollectionConfig = {
   },
   admin: {
     group: 'Students',
+    hidden: true,
     defaultColumns: ['question', 'total', 'countA', 'countB', 'countC', 'countD'],
   },
   fields: [

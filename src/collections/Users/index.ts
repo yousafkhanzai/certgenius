@@ -32,7 +32,9 @@ export const Users: CollectionConfig = {
     update: authenticated,
     unlock: authenticated,
   },
+  labels: { singular: 'Admin account', plural: 'Admin account' },
   admin: {
+    group: 'Settings',
     defaultColumns: ['name', 'email'],
     useAsTitle: 'name',
   },

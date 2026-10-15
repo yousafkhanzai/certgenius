@@ -5,6 +5,8 @@ import { revalidateHeader } from './hooks/revalidateHeader'
 
 export const Header: GlobalConfig = {
   slug: 'header',
+  // The site header is fixed in code now; hidden from the admin menu.
+  admin: { hidden: true },
   access: {
     read: () => true,
   },

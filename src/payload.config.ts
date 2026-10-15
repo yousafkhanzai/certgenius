@@ -24,6 +24,7 @@ import { Header } from './Header/config'
 import { plugins } from './plugins'
 import { quizEndpoints } from './quiz/endpoints'
 import { adminGateEndpoints } from './security/endpoints'
+import { adminToolEndpoints } from './admin/endpoints'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
 
@@ -55,7 +56,8 @@ export default buildConfig({
       // `StaleContentBanner` lists Blog Posts, Pages, and Certifications that
       // haven't been updated in 3+ months, right below it.
       beforeDashboard: ['@/components/BeforeDashboard', '@/components/StaleContentBanner'],
-      afterNavLinks: ['@/components/Importer/NavLink'],
+      // "Tools" section at the top of the admin menu.
+      beforeNavLinks: ['@/components/AdminTools/Nav'],
       views: {
         // /admin/import - spreadsheet importer for questions and certifications.
         importer: {
@@ -63,6 +65,10 @@ export default buildConfig({
           path: '/import',
           meta: { title: 'Import spreadsheets' },
         },
+        // Admin tools: certification health board, site stats, problem reports inbox.
+        health: { Component: '@/components/AdminTools/HealthView', path: '/health', meta: { title: 'Certification health' } },
+        stats: { Component: '@/components/AdminTools/StatsView', path: '/stats', meta: { title: 'Site stats' } },
+        reports: { Component: '@/components/AdminTools/ReportsView', path: '/reports', meta: { title: 'Problem reports' } },
         // /admin/security - set or change the pattern lock on the admin.
         security: {
           Component: '@/components/AdminGate',
@@ -128,7 +134,7 @@ export default buildConfig({
   ],
   // Quiz API: /api/quiz/... (see src/quiz/endpoints.ts).
   // Admin pattern lock API: /api/admin-gate/... (see src/security).
-  endpoints: [...quizEndpoints, ...adminGateEndpoints],
+  endpoints: [...quizEndpoints, ...adminGateEndpoints, ...adminToolEndpoints],
   cors: trustedOrigins,
   // Login cookies are only honoured on requests coming from our own site, so
   // another website can't make a visitor's browser act on their account.

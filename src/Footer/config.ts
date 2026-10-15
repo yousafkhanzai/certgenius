@@ -5,6 +5,8 @@ import { revalidateFooter } from './hooks/revalidateFooter'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
+  // The site footer is fixed in code now; hidden from the admin menu.
+  admin: { hidden: true },
   access: {
     read: () => true,
   },

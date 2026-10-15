@@ -25,11 +25,14 @@ import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from 
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/RowLabel'
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
-import { default as default_a2db1db80a84ebaa43f4583742f048ec } from '@/components/Importer/NavLink'
 import { default as default_1a7510af427896d367a49dbf838d2de6 } from '@/components/BeforeDashboard'
 import { default as default_19abeeda7b25e283fb50c3b464a5efbd } from '@/components/StaleContentBanner'
 import { default as default_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/components/BeforeLogin'
+import { default as default_eafa4e6cfdac9631ca5d17472d77deaa } from '@/components/AdminTools/Nav'
 import { default as default_4e05c94670d65b4ae198fcb24ddf655b } from '@/components/Importer'
+import { default as default_d9d32e0a586516758bc4596693f67dbd } from '@/components/AdminTools/HealthView'
+import { default as default_495db1091f246247e703d7762d0641b0 } from '@/components/AdminTools/StatsView'
+import { default as default_2a1efdc3eefec46c582eb7c1dc27e101 } from '@/components/AdminTools/ReportsView'
 import { default as default_be10fa3e75acca25dc5a0d0cf30c1fc3 } from '@/components/AdminGate'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -62,11 +65,14 @@ export const importMap = {
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
   "@/Header/RowLabel#RowLabel": RowLabel_ec255a65fa6fa8d1faeb09cf35284224,
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
-  "@/components/Importer/NavLink#default": default_a2db1db80a84ebaa43f4583742f048ec,
   "@/components/BeforeDashboard#default": default_1a7510af427896d367a49dbf838d2de6,
   "@/components/StaleContentBanner#default": default_19abeeda7b25e283fb50c3b464a5efbd,
   "@/components/BeforeLogin#default": default_8a7ab0eb7ab5c511aba12e68480bfe5e,
+  "@/components/AdminTools/Nav#default": default_eafa4e6cfdac9631ca5d17472d77deaa,
   "@/components/Importer#default": default_4e05c94670d65b4ae198fcb24ddf655b,
+  "@/components/AdminTools/HealthView#default": default_d9d32e0a586516758bc4596693f67dbd,
+  "@/components/AdminTools/StatsView#default": default_495db1091f246247e703d7762d0641b0,
+  "@/components/AdminTools/ReportsView#default": default_2a1efdc3eefec46c582eb7c1dc27e101,
   "@/components/AdminGate#default": default_be10fa3e75acca25dc5a0d0cf30c1fc3,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

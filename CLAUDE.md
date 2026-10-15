@@ -58,7 +58,7 @@ Index questions by certification + domain. There will be 15,000+ questions; neve
 Options: domain (All or one), number of questions (10, 25, 50, All). After answering: correct/incorrect state, the correct answer highlighted, explanation, why each wrong option is wrong (if why_ columns exist), official reference link, a "Study guide" card linking to blog_post_url, a "Remember" key takeaway line, and "% of students chose this" under each option (only show once a question has 30+ answers). Hint button before answering. Bookmark button. Session tracker (green/red/grey blocks). Report a problem button. Keyboard: 1–4 choose, B bookmark, Enter next.
 
 === QUIZ: EXAM SIMULATION ===
-Uses the certification's examQuestionCount, durationMinutes and passScore. Questions picked randomly but distributed by domain weight. Live countdown card (big MM:SS, bar, pace tip "about Xs per remaining question"); turns amber under 10 minutes and red under 5; Hide/Show timer button; header mini-timer matches. Auto-submits at 00:00. Cross-out button per option. Bookmark button. Previous/Next. Keyboard: 1–4, B, X, Enter, arrow keys. No hints, no explanations until the end, NO ADS. Save progress continuously so a refresh resumes the attempt with the correct remaining time.
+Uses the certification's examQuestionCount, durationMinutes and passScore. Questions picked randomly but distributed by domain weight. Live countdown card (big MM:SS, bar, pace tip "about Xs per remaining question"); turns amber under 10 minutes and red under 5; Hide/Show timer button; header mini-timer matches. Auto-submits at 00:00. Cross-out button per option. Bookmark button. Previous/Next. Keyboard: 1–4, B, X, Enter, arrow keys. No hints, no explanations until the end. Ads: left and right side rails only (see MONETISATION). Save progress continuously so a refresh resumes the attempt with the correct remaining time.
 Do NOT build: question navigator grid, flag button, confidence rating, smart review, AI tutor.
 
 === RESULTS PAGE ===
@@ -76,7 +76,7 @@ ALSO: category pages, vendor pages, blog post template with a YouTube video embe
 Metadata, canonical URLs, XML sitemap, robots. JSON-LD: Organization, WebSite with SearchAction, BreadcrumbList, Course (certification pages), FAQPage, Quiz (sample questions), Article and VideoObject (blog posts). Fast pages: static generation where possible.
 
 === MONETISATION ===
-Google AdSense slots ONLY on homepage, certification, category, vendor and blog pages. Never on quiz, exam, results, bookmarks or profile pages. Cookie consent banner with Google Consent Mode v2 (required for EU/UK). Affiliate course links managed per certification in the admin.
+Google AdSense slots on homepage, certification, category, vendor and blog pages. QUIZ ADS (owner decision, Oct 2026): practice and exam simulation screens may show ads ONLY in left and right side rails beside the quiz - never in the header, never inside or between questions, never pop-ups, interstitials or anything that covers or moves the quiz. No ads on bookmarks or profile pages. Cookie consent banner with Google Consent Mode v2 (required for EU/UK). Affiliate course links managed per certification in the admin.
 
 === PHASES ===
 0 Audit (now). 1 Data model + question/certification import + student accounts. 2 Practice mode + exam simulation. 3 Results, profile, bookmarks, problem reports. 4 Homepage + certification page. 5 Category, vendor, blog template, legal pages, SEO schema, sitemap. 6 Ads slots, cookie consent, affiliate blocks, performance and mobile polish.

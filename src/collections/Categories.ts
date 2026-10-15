@@ -13,6 +13,8 @@ export const Categories: CollectionConfig = {
     update: authenticated,
   },
   admin: {
+    // Not used by CertGenius; hidden from the admin menu (data is kept).
+    hidden: true,
     useAsTitle: 'title',
   },
   fields: [

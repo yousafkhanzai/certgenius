@@ -27,6 +27,7 @@ export const plugins: Plugin[] = [
   redirectsPlugin({
     collections: ['pages', 'posts'],
     overrides: {
+      admin: { hidden: true },
       // @ts-expect-error - This is a valid override, mapped fields don't resolve to the same type
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
@@ -58,7 +59,10 @@ export const plugins: Plugin[] = [
     fields: {
       payment: false,
     },
+    // The template's contact-form builder is not used; hidden from the menu.
+    formSubmissionOverrides: { admin: { hidden: true } },
     formOverrides: {
+      admin: { hidden: true },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
           if ('name' in field && field.name === 'confirmationMessage') {
@@ -84,6 +88,7 @@ export const plugins: Plugin[] = [
     collections: ['posts'],
     beforeSync: beforeSyncWithSearch,
     searchOverrides: {
+      admin: { hidden: true },
       fields: ({ defaultFields }) => {
         return [...defaultFields, ...searchFields]
       },
