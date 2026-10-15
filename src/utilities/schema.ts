@@ -1,12 +1,10 @@
 // schema.org / JSON-LD structured data helpers.
 //
-// Google has deprecated FAQ rich results (May 2026) and Practice
-// Problem/Quiz rich results (January 2026) - so FAQPage and Quiz markup no
-// longer earn any visible search result enhancement, even though the
-// schema.org types still technically exist. We deliberately don't generate
-// those here. What's below is what's still live and worth having:
-// Organization/WebSite (site identity), BreadcrumbList (breadcrumb rich
-// display), Course (certification pages), and Article (blog posts).
+// Organization/WebSite (site identity), BreadcrumbList, Course (certification
+// pages), Article and VideoObject (blog posts), CollectionPage (category and
+// vendor pages), plus FAQPage and Quiz as the spec asks. Google stopped
+// showing FAQ (May 2026) and Quiz (January 2026) rich results, but the markup
+// is still valid schema.org and helps other search engines read the page.
 import { getServerSideURL } from './getURL'
 
 const SITE_NAME = 'CertGenius'
@@ -122,5 +120,80 @@ export function articleSchema(post: ArticleInput) {
         url: `${url}/favicon.svg`,
       },
     },
+  }
+}
+
+// A listing page (category, vendor) and the certifications on it.
+export function collectionPageSchema(page: {
+  name: string
+  description: string
+  path: string
+  items: Array<{ name: string; path: string }>
+}) {
+  const url = getServerSideURL()
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: page.name,
+    description: page.description,
+    url: `${url}${page.path}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: page.items.length,
+      itemListElement: page.items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+        url: `${url}${item.path}`,
+      })),
+    },
+  }
+}
+
+// The YouTube video at the top of a blog post.
+export function videoSchema(video: {
+  youtubeId: string
+  name: string
+  description?: string | null
+  uploadDate?: string | null
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: video.name,
+    description: video.description || video.name,
+    thumbnailUrl: `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`,
+    ...(video.uploadDate ? { uploadDate: video.uploadDate } : {}),
+    embedUrl: `https://www.youtube-nocookie.com/embed/${video.youtubeId}`,
+    contentUrl: `https://www.youtube.com/watch?v=${video.youtubeId}`,
+  }
+}
+
+// The sample questions on a certification page.
+export function quizSchema(quiz: {
+  name: string
+  path: string
+  questions: Array<{ text: string; options: string[]; correct: string; explanation?: string | null }>
+}) {
+  const url = getServerSideURL()
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Quiz',
+    name: quiz.name,
+    url: `${url}${quiz.path}`,
+    educationalLevel: 'Professional certification',
+    hasPart: quiz.questions.map((q) => ({
+      '@type': 'Question',
+      eduQuestionType: 'Multiple choice',
+      text: q.text,
+      suggestedAnswer: q.options.filter((o) => o !== q.correct).map((text) => ({ '@type': 'Answer', text })),
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: q.correct,
+        ...(q.explanation ? { answerExplanation: { '@type': 'Comment', text: q.explanation } } : {}),
+      },
+    })),
   }
 }

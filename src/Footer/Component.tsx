@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import React from 'react'
 
+import { LEGAL_PAGES } from '@/components/site/LegalPage'
 import { LogoLink } from '@/components/site/SiteHeader'
 import { ThemeToggle } from '@/components/site/ThemeToggle'
 import { homeData } from '@/site/data'
+import { categoryHref } from '@/site/taxonomy'
 
 // Site footer. Always dark navy, in both light and dark mode.
 export async function Footer() {
@@ -25,7 +27,7 @@ export async function Footer() {
           <ThemeToggle withLabel className="mt-4 border border-hero-border px-3 text-hero-body hover:text-white" />
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <nav aria-label="Popular exams" className={column}>
             <span className={heading}>Popular exams</span>
             {(data?.footerCerts || []).map((c) => (
@@ -41,7 +43,7 @@ export async function Footer() {
             <nav aria-label="Categories" className={column}>
               <span className={heading}>Categories</span>
               {categories.map((c) => (
-                <Link key={c.value} href={`/certifications?category=${encodeURIComponent(c.value)}`} className={link}>
+                <Link key={c.value} href={categoryHref(c.value)} className={link}>
                   {c.label}
                 </Link>
               ))}
@@ -52,6 +54,12 @@ export async function Footer() {
             <Link href="/posts" className={link}>
               Study guides
             </Link>
+            <Link href="/vendors" className={link}>
+              Vendors
+            </Link>
+            <Link href="/categories" className={link}>
+              Categories
+            </Link>
             <Link href="/faq" className={link}>
               FAQ
             </Link>
@@ -61,6 +69,14 @@ export async function Footer() {
             <Link href="/signup" className={link}>
               Create a free account
             </Link>
+          </nav>
+          <nav aria-label="Company and legal" className={column}>
+            <span className={heading}>Company and legal</span>
+            {LEGAL_PAGES.map((p) => (
+              <Link key={p.path} href={p.path} className={link}>
+                {p.name}
+              </Link>
+            ))}
           </nav>
         </div>
       </div>

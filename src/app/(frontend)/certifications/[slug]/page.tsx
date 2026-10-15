@@ -14,9 +14,10 @@ import RichText from '@/components/RichText'
 import type { Certification, Post } from '@/payload-types'
 import { domainQuestionCounts, feedbackFor, guestQuestionIds, publicQuestions } from '@/quiz/server'
 import { listedCertifications } from '@/site/data'
+import { categoryHref } from '@/site/taxonomy'
 import { getServerSideURL } from '@/utilities/getURL'
 import { postHeadings } from '@/utilities/headings'
-import { breadcrumbSchema, courseSchema } from '@/utilities/schema'
+import { breadcrumbSchema, courseSchema, quizSchema } from '@/utilities/schema'
 
 // Rebuilt from live data every 10 minutes (question counts, new study guides).
 export const revalidate = 600
@@ -157,6 +158,22 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
         />
       )}
 
+      {samples.length > 0 && (
+        <JsonLd
+          data={quizSchema({
+            name: `${cert.title} sample questions`,
+            path: `/certifications/${cert.slug}#sample-questions`,
+            questions: samples.flatMap((q) => {
+              const fb = sampleAnswers.get(q.id)
+              const correct = fb && q.options.find((o) => o.letter === fb.correct)?.text
+              return correct
+                ? [{ text: q.text, options: q.options.map((o) => o.text), correct, explanation: fb.explanation }]
+                : []
+            }),
+          })}
+        />
+      )}
+
       {/* Hero */}
       <section className="bg-hero text-white">
         <div className={`${container} grid grid-cols-[minmax(0,1fr)] gap-10 py-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:py-16`}>
@@ -168,7 +185,7 @@ export default async function CertificationPage({ params: paramsPromise }: Args)
               {category && (
                 <>
                   <span aria-hidden="true">/</span>
-                  <Link href={`/certifications?category=${category.value}`} className="text-hero-muted no-underline hover:text-white">
+                  <Link href={categoryHref(category.value)} className="text-hero-muted no-underline hover:text-white">
                     {category.label}
                   </Link>
                 </>

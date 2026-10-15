@@ -15,7 +15,10 @@ import { generateMeta } from '@/utilities/generateMeta'
 import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { JsonLd } from '@/components/JsonLd'
-import { articleSchema, breadcrumbSchema } from '@/utilities/schema'
+import { articleSchema, breadcrumbSchema, videoSchema } from '@/utilities/schema'
+import { VideoEmbed } from '@/components/site/VideoEmbed'
+import { youtubeId } from '@/utilities/youtube'
+import Link from 'next/link'
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -53,6 +56,9 @@ export default async function Post({ params: paramsPromise }: Args) {
 
   if (!post) return <PayloadRedirects url={url} />
 
+  const videoId = youtubeId(post.videoUrl)
+  const covers = draft ? null : await coveredDomain(post.id)
+
   const metaImage =
     post.meta?.image && typeof post.meta.image === 'object' ? post.meta.image.url : undefined
 
@@ -78,6 +84,17 @@ export default async function Post({ params: paramsPromise }: Args) {
         ])}
       />
 
+      {videoId && (
+        <JsonLd
+          data={videoSchema({
+            youtubeId: videoId,
+            name: post.title,
+            description: post.meta?.description,
+            uploadDate: post.publishedAt,
+          })}
+        />
+      )}
+
       {/* Allows redirects for valid pages too */}
       <PayloadRedirects disableNotFound url={url} />
 
@@ -97,6 +114,27 @@ export default async function Post({ params: paramsPromise }: Args) {
           <aside className="hidden xl:block" aria-hidden="true" />
 
           <div className="min-w-0">
+            {videoId && (
+              <div className="mx-auto mb-10 max-w-[48rem]">
+                <VideoEmbed id={videoId} title={post.title} />
+              </div>
+            )}
+            {covers && (
+              <aside className="mx-auto mb-10 flex max-w-[48rem] flex-col gap-3 rounded-[20px] border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+                <span className="flex flex-col gap-1">
+                  <span className="text-xs font-bold uppercase tracking-[0.06em] text-primary">Study guide for</span>
+                  <span className="text-[15px] font-bold leading-snug text-card-foreground">
+                    {covers.certTitle}: {covers.domain}
+                  </span>
+                </span>
+                <Link
+                  href={`/certifications/${covers.certSlug}/quiz?domain=${encodeURIComponent(covers.domain)}`}
+                  className="inline-flex w-fit flex-none items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white no-underline hover:bg-primary-hover hover:text-white"
+                >
+                  Practise these questions
+                </Link>
+              </aside>
+            )}
             <RichText
               className="mx-auto max-w-none break-words"
               data={post.content}
@@ -145,4 +183,21 @@ const queryPostBySlug = cache(async ({ slug }: { slug: string }) => {
   })
 
   return result.docs?.[0] || null
+})
+
+// The published certification domain this blog is the study guide for.
+const coveredDomain = cache(async (postId: number) => {
+  const payload = await getPayload({ config: configPromise })
+  const found = await payload.find({
+    collection: 'certifications',
+    depth: 0,
+    limit: 1,
+    overrideAccess: false,
+    pagination: false,
+    where: { 'domains.studyGuide': { equals: postId } },
+    select: { title: true, slug: true, domains: true },
+  })
+  const cert = found.docs[0]
+  const domain = cert?.domains?.find((d) => (typeof d.studyGuide === 'object' ? d.studyGuide?.id : d.studyGuide) === postId)
+  return cert && domain ? { certTitle: cert.title, certSlug: cert.slug as string, domain: domain.name } : null
 })

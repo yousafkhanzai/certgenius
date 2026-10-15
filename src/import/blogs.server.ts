@@ -1,6 +1,7 @@
 import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical'
 import type { PayloadRequest } from 'payload'
 
+import { youtubeId } from '../utilities/youtube'
 import type { RowResult } from './columns'
 
 // Study-guide blog import. Content rule: every domain of a certification has
@@ -13,6 +14,7 @@ import type { RowResult } from './columns'
 //   certification: certified-ethereum-developer
 //   domain: Solidity Programming Language
 //   excerpt: "One or two sentences shown in Google and on listing cards."
+//   videoUrl: https://www.youtube.com/watch?v=...   (optional)
 //   ---
 //
 // Importing creates (or updates) the blog post and attaches it to that domain.
@@ -66,6 +68,7 @@ export function parseBlogFile(text: string): { blog?: Parsed; problems: string[]
   else if (!SLUG_PATTERN.test(blog.slug)) problems.push(`slug "${blog.slug}" may only use lowercase letters, numbers and single hyphens`)
   if (!blog.certification) problems.push('certification is missing (use the certification slug)')
   if (!blog.domain) problems.push('domain is missing')
+  if (blog.videoUrl && !youtubeId(blog.videoUrl)) problems.push('videoUrl must be a YouTube video link')
   if (blog.markdown.length < 200) problems.push('the blog text is missing or very short')
   if (blog.title.length > 200) problems.push('title is longer than 200 characters')
   return { blog, problems }
@@ -143,7 +146,6 @@ export async function checkBlogFiles(req: PayloadRequest, files: BlogFile[]): Pr
     seenDomains.add(domainKey)
 
     const notes: string[] = []
-    if (blog.videoUrl) notes.push('videoUrl is kept for later: the blog video field arrives with the blog template')
     const existingPostId = postBySlug.get(blog.slug)
     if (existingPostId !== undefined) {
       return { row, status: 'exists', problems: notes, label, key: blog.slug, blog, certId, existingPostId }
@@ -167,6 +169,7 @@ export async function importBlogFiles(req: PayloadRequest, files: BlogFile[], op
         slug: r.blog.slug,
         content: convertMarkdownToLexical({ editorConfig, markdown: r.blog.markdown }),
         meta: { title: r.blog.title, description: r.blog.excerpt },
+        ...(r.blog.videoUrl ? { videoUrl: r.blog.videoUrl } : {}),
       }
       const post = isNew
         ? await payload.create({

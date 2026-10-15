@@ -16,6 +16,7 @@ import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { blogImportEndpoint } from '../../import/endpoints'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
+import { validateYouTubeUrl } from '../../utilities/youtube'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
 
@@ -95,6 +96,16 @@ export const Posts: CollectionConfig<'posts'> = {
               relationTo: 'media',
               // Blog posts don't use images; the field stays so no data is dropped.
               admin: { hidden: true },
+            },
+            {
+              // Shown near the top of the blog post, above the text.
+              name: 'videoUrl',
+              type: 'text',
+              label: 'YouTube video link',
+              validate: validateYouTubeUrl,
+              admin: {
+                description: 'Optional. Paste a YouTube link, e.g. https://www.youtube.com/watch?v=abc123XYZ_0',
+              },
             },
             {
               name: 'content',

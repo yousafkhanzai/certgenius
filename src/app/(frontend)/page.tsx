@@ -1,68 +1,24 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
-import {
-  Blocks,
-  Bot,
-  Building2,
-  ClipboardList,
-  Cloud,
-  CloudCog,
-  Database,
-  Flag,
-  Gamepad2,
-  GitBranch,
-  HeartPulse,
-  Layers,
-  Lock,
-  Monitor,
-  Network,
-  PenTool,
-  RefreshCw,
-  Scale,
-  Server,
-  ShieldCheck,
-  Smartphone,
-  type LucideIcon,
-} from 'lucide-react'
+import { Flag } from 'lucide-react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
 
 import { CertCardView, ComingSoonCard } from '@/components/Home/CertCardView'
 import { HOME_FAQ } from '@/components/Home/faq'
+import { JsonLd } from '@/components/JsonLd'
 import { TryQuestion } from '@/components/Home/TryQuestion'
 import { WelcomeBack } from '@/components/Home/WelcomeBack'
 import { getPublishedCertification, guestQuestionIds, publicQuestions } from '@/quiz/server'
 import { homeData } from '@/site/data'
+import { categoryHref, categoryIcon, vendorHref } from '@/site/taxonomy'
 import { getServerSideURL } from '@/utilities/getURL'
 
 // Rebuilt from live data every 10 minutes: new certifications, questions and
 // blogs appear on their own, and the page stays static and fast.
 export const revalidate = 600
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  'cloud-ai': CloudCog,
-  'ai-vendor': Bot,
-  'ai-security-governance': ShieldCheck,
-  blockchain: Blocks,
-  'cloud-general': Cloud,
-  cybersecurity: Lock,
-  'data-engineering-analytics': Database,
-  'devops-sre': GitBranch,
-  'networking-it-support': Network,
-  'project-management': ClipboardList,
-  'agile-scrum': RefreshCw,
-  'finance-legal': Scale,
-  healthcare: HeartPulse,
-  'backend-development': Server,
-  'frontend-development': Monitor,
-  'full-stack': Layers,
-  'ui-ux-design': PenTool,
-  'mobile-development': Smartphone,
-  'game-development': Gamepad2,
-  'enterprise-platforms': Building2,
-}
 
 const FEATURES = [
   { title: 'Real exam length and timer', text: 'Exam simulations use the same number of questions, time limit and pass score as the real exam.' },
@@ -106,6 +62,18 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* FAQPage markup for the questions shown on this page (three per group). */}
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: HOME_FAQ.flatMap((g) => g.items.slice(0, 3)).map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        }}
+      />
       {/* Hero */}
       <section className="bg-hero text-white">
         <div
@@ -203,7 +171,7 @@ export default async function HomePage() {
             {data.vendors.map((v) => (
               <Link
                 key={v.name}
-                href={`/certifications?vendor=${encodeURIComponent(v.name)}`}
+                href={vendorHref(v.name)}
                 className="rounded-2xl border border-border bg-card px-5 py-3.5 text-base font-bold text-card-foreground no-underline hover:border-primary hover:text-primary"
               >
                 {v.name}
@@ -226,11 +194,11 @@ export default async function HomePage() {
               {data.categories
                 .filter((c) => c.count > 0)
                 .map((c) => {
-                  const Icon = CATEGORY_ICONS[c.value] || Layers
+                  const Icon = categoryIcon(c.value)
                   return (
                     <Link
                       key={c.value}
-                      href={`/certifications?category=${c.value}`}
+                      href={categoryHref(c.value)}
                       className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4 text-foreground no-underline hover:border-primary hover:text-foreground"
                     >
                       <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-secondary text-secondary-foreground">

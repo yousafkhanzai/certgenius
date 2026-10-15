@@ -263,6 +263,10 @@ export interface Post {
   id: number;
   title: string;
   heroImage?: (number | null) | Media;
+  /**
+   * Optional. Paste a YouTube link, e.g. https://www.youtube.com/watch?v=abc123XYZ_0
+   */
+  videoUrl?: string | null;
   content: {
     root: {
       type: string;
@@ -1631,6 +1635,7 @@ export interface FormBlockSelect<T extends boolean = true> {
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   heroImage?: T;
+  videoUrl?: T;
   content?: T;
   relatedPosts?: T;
   categories?: T;
