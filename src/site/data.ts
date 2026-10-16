@@ -4,7 +4,7 @@ import { cache } from 'react'
 
 import { CERT_CATEGORIES, visibleInListings, type CertCategory } from '@/collections/Certifications/options'
 import type { Certification } from '@/payload-types'
-import { pool } from '@/quiz/server'
+import { IN_A_DOMAIN, pool } from '@/quiz/server'
 
 // Data for the public pages. PUBLISHING RULE: everything here is computed
 // from PUBLISHED certifications that are visible in listings (not Retired or
@@ -31,7 +31,7 @@ export type CertCard = {
 export async function questionCountsByCertification(payload: Payload): Promise<Map<number, number>> {
   const { rows } = await pool(payload).query<{ certification_id: number; n: number }>(
     `select certification_id, count(*)::int as n from questions
-     where option_a is not null and correct_answer is not null group by certification_id`,
+     where option_a is not null and correct_answer is not null and ${IN_A_DOMAIN} group by certification_id`,
   )
   return new Map(rows.map((r) => [r.certification_id, r.n]))
 }

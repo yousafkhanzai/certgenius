@@ -1040,6 +1040,16 @@ export interface Student {
   currentStreak?: number | null;
   longestStreak?: number | null;
   lastActiveDate?: string | null;
+  /**
+   * Two-letter country code, e.g. PK, GB, US.
+   */
+  country?: string | null;
+  countrySource?: ('auto' | 'student') | null;
+  /**
+   * Approximate, from the internet connection.
+   */
+  city?: string | null;
+  lastSeenAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1938,6 +1948,10 @@ export interface StudentsSelect<T extends boolean = true> {
   currentStreak?: T;
   longestStreak?: T;
   lastActiveDate?: T;
+  country?: T;
+  countrySource?: T;
+  city?: T;
+  lastSeenAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

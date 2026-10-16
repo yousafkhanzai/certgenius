@@ -6,6 +6,7 @@ import {
   matchCategory,
   matchStatus,
 } from '@/collections/Certifications/options'
+import { validateHttpUrl } from '@/access/roles'
 import type { ImportRow, RowResult } from './columns'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -23,8 +24,47 @@ type Checked = RowResult & {
     vendor: string | null
     certCategory: NonNullable<ReturnType<typeof matchCategory>>
     examStatus: NonNullable<ReturnType<typeof matchStatus>>
-  }
+  } & OptionalFields
   existingId?: number
+}
+
+// The optional columns, only when filled in (blank cells never overwrite).
+type OptionalFields = Partial<{
+  summary: string
+  passingScore: number
+  examQuestionCount: number
+  durationMinutes: number
+  delivery: string
+  officialUrl: string
+}>
+
+function optionalFields(v: Record<string, string>, problems: string[]): OptionalFields {
+  const out: OptionalFields = {}
+  const num = (col: string, min: number, max: number) => {
+    if (!v[col]) return undefined
+    const n = Number(v[col].replace('%', '').trim())
+    if (!Number.isInteger(n) || n < min || n > max) {
+      problems.push(`${col} must be a whole number from ${min} to ${max} (got "${v[col]}")`)
+      return undefined
+    }
+    return n
+  }
+  if (v.short_description) {
+    if (v.short_description.length > 240) problems.push('short_description is longer than 240 characters')
+    else out.summary = v.short_description
+  }
+  const pass = num('pass_score', 1, 100)
+  if (pass !== undefined) out.passingScore = pass
+  const questions = num('exam_questions', 1, 500)
+  if (questions !== undefined) out.examQuestionCount = questions
+  const minutes = num('duration_minutes', 1, 600)
+  if (minutes !== undefined) out.durationMinutes = minutes
+  if (v.delivery) out.delivery = v.delivery.slice(0, 200)
+  if (v.official_url) {
+    if (validateHttpUrl(v.official_url) !== true) problems.push('official_url must be a full https:// link')
+    else out.officialUrl = v.official_url
+  }
+  return out
 }
 
 export async function checkCertificationRows(payload: Payload, rows: ImportRow[]): Promise<Checked[]> {
@@ -65,6 +105,7 @@ export async function checkCertificationRows(payload: Payload, rows: ImportRow[]
         `category "${v.category}" is not one of the 20 categories (${CERT_CATEGORIES.map((c) => c.label).join(', ')})`,
       )
     }
+    const extra = optionalFields(v, problems)
     const examStatus = v.status ? matchStatus(v.status) : 'active'
     if (!examStatus) {
       problems.push(
@@ -87,6 +128,7 @@ export async function checkCertificationRows(payload: Payload, rows: ImportRow[]
       vendor: v.vendor || null,
       certCategory,
       examStatus,
+      ...extra,
     }
     const existingId = existingBySlug.get(v.slug)
     if (existingId !== undefined) {
@@ -139,6 +181,12 @@ export async function importCertificationRows(
             vendor: r.data.vendor,
             certCategory: r.data.certCategory,
             examStatus: r.data.examStatus,
+            // Optional columns: only the ones filled in on the sheet.
+            ...Object.fromEntries(
+              (['summary', 'passingScore', 'examQuestionCount', 'durationMinutes', 'delivery', 'officialUrl'] as const)
+                .filter((k) => r.data?.[k] !== undefined)
+                .map((k) => [k, r.data?.[k]]),
+            ),
           },
           draft: true,
           overrideAccess: true,

@@ -20,6 +20,7 @@ import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f
 import { BlocksFeatureClient as BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { default as default_50debda2e3cf3cf3701836ac8ac74329 } from '@/components/AdminTools/CountryCell'
 import { LinkToDoc as LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { ReindexButton as ReindexButton_aead06e4cbf6b2620c5c51c9ab283634 } from '@payloadcms/plugin-search/client'
 import { FolderTypeField as FolderTypeField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
@@ -33,6 +34,7 @@ import { default as default_4e05c94670d65b4ae198fcb24ddf655b } from '@/component
 import { default as default_d9d32e0a586516758bc4596693f67dbd } from '@/components/AdminTools/HealthView'
 import { default as default_495db1091f246247e703d7762d0641b0 } from '@/components/AdminTools/StatsView'
 import { default as default_2a1efdc3eefec46c582eb7c1dc27e101 } from '@/components/AdminTools/ReportsView'
+import { default as default_cc8245fdb300a33bdeaaf569b872bb99 } from '@/components/AdminTools/StudentsView'
 import { default as default_be10fa3e75acca25dc5a0d0cf30c1fc3 } from '@/components/AdminGate'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -60,6 +62,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BlocksFeatureClient": BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/next/rsc#FolderTableCell": FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@/components/AdminTools/CountryCell#default": default_50debda2e3cf3cf3701836ac8ac74329,
   "@payloadcms/plugin-search/client#LinkToDoc": LinkToDoc_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/plugin-search/client#ReindexButton": ReindexButton_aead06e4cbf6b2620c5c51c9ab283634,
   "@payloadcms/next/client#FolderTypeField": FolderTypeField_2b8867833a34864a02ddf429b0728a40,
@@ -73,6 +76,7 @@ export const importMap = {
   "@/components/AdminTools/HealthView#default": default_d9d32e0a586516758bc4596693f67dbd,
   "@/components/AdminTools/StatsView#default": default_495db1091f246247e703d7762d0641b0,
   "@/components/AdminTools/ReportsView#default": default_2a1efdc3eefec46c582eb7c1dc27e101,
+  "@/components/AdminTools/StudentsView#default": default_cc8245fdb300a33bdeaaf569b872bb99,
   "@/components/AdminGate#default": default_be10fa3e75acca25dc5a0d0cf30c1fc3,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

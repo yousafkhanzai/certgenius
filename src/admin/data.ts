@@ -220,3 +220,124 @@ export async function problemReports(payload: Payload, status: ReportStatus | 'a
     counts: Object.fromEntries([...REPORT_STATUSES.map((s) => [s.value, count(s.value)]), ['all', counts.rows.reduce((t, r) => t + r.n, 0)]]),
   }
 }
+
+// ---------- students ----------
+
+export type StudentRow = {
+  id: number
+  name: string | null
+  email: string
+  country: string | null
+  city: string | null
+  joined: string
+  last_seen: string | null
+  streak: number
+  answers: number
+  correct: number
+  practice_sessions: number
+  exams_started: number
+  exams_finished: number
+  exams_passed: number
+  avg_exam_score: number | null
+  top_cert: string | null
+}
+
+// What a student mostly does, in plain words.
+export function mostlyDoing(s: Pick<StudentRow, 'practice_sessions' | 'exams_started' | 'answers'>): string {
+  if (!s.practice_sessions && !s.exams_started) return s.answers ? 'Free questions only' : 'Not started yet'
+  if (s.exams_started > s.practice_sessions) return 'Mostly exam simulations'
+  if (s.exams_started === 0) return 'Practice only'
+  return 'Mostly practice'
+}
+
+export async function studentList(payload: Payload, filters: { q?: string; country?: string; id?: number }) {
+  const params: unknown[] = []
+  const where: string[] = []
+  if (filters.q) {
+    // Search text is matched literally: % and _ are not wildcards here.
+    params.push(`%${filters.q.replace(/[%_\\]/g, (m) => '\\' + m)}%`)
+    where.push(`(s.email ilike $${params.length} or s.name ilike $${params.length})`)
+  }
+  if (filters.id) {
+    params.push(filters.id)
+    where.push(`s.id = $${params.length}`)
+  }
+  if (filters.country) {
+    params.push(filters.country)
+    where.push(`s.country = $${params.length}`)
+  }
+  const { rows } = await pool(payload).query<StudentRow>(
+    `with ans as (
+       select student_id, count(*)::int n, count(*) filter (where is_correct)::int c from attempt_answers group by student_id
+     ), att as (
+       select student_id,
+              count(*) filter (where mode = 'practice')::int practice,
+              count(*) filter (where mode = 'exam')::int exams,
+              count(*) filter (where mode = 'exam' and status = 'submitted')::int exams_done,
+              count(*) filter (where mode = 'exam' and status = 'submitted' and passed)::int exams_passed,
+              round(avg(score_percent) filter (where mode = 'exam' and status = 'submitted'))::int avg_score
+       from attempts group by student_id
+     ), top as (
+       select distinct on (aa.student_id) aa.student_id, c.title
+       from attempt_answers aa join certifications c on c.id = aa.certification_id
+       group by aa.student_id, c.title order by aa.student_id, count(*) desc
+     )
+     select s.id, s.name, s.email, s.country, s.city, s.created_at as joined,
+            greatest(s.last_seen_at, s.last_active_date) as last_seen, coalesce(s.current_streak, 0)::int as streak,
+            coalesce(ans.n, 0) answers, coalesce(ans.c, 0) correct,
+            coalesce(att.practice, 0) practice_sessions, coalesce(att.exams, 0) exams_started,
+            coalesce(att.exams_done, 0) exams_finished, coalesce(att.exams_passed, 0) exams_passed,
+            att.avg_score as avg_exam_score, top.title as top_cert
+     from students s
+     left join ans on ans.student_id = s.id
+     left join att on att.student_id = s.id
+     left join top on top.student_id = s.id
+     ${where.length ? `where ${where.join(' and ')}` : ''}
+     order by coalesce(greatest(s.last_seen_at, s.last_active_date), s.created_at) desc
+     limit 1000`,
+    params,
+  )
+  const countries = await pool(payload).query<{ country: string | null; n: number }>(
+    `select country, count(*)::int n from students group by country order by n desc`,
+  )
+  return { students: rows, countries: countries.rows }
+}
+
+export async function studentDetail(payload: Payload, id: number) {
+  const db = pool(payload)
+  const [list, perCert, recent] = await Promise.all([
+    db.query<{ id: number }>(`select id from students where id = $1`, [id]),
+    db.query<{
+      title: string
+      slug: string | null
+      answers: number
+      correct: number
+      practice: number
+      exams: number
+      best_score: number | null
+      last: string | null
+    }>(
+      `select c.title, c.slug,
+              (select count(*) from attempt_answers a where a.student_id = $1 and a.certification_id = c.id)::int answers,
+              (select count(*) from attempt_answers a where a.student_id = $1 and a.certification_id = c.id and a.is_correct)::int correct,
+              (select count(*) from attempts t where t.student_id = $1 and t.certification_id = c.id and t.mode = 'practice')::int practice,
+              (select count(*) from attempts t where t.student_id = $1 and t.certification_id = c.id and t.mode = 'exam' and t.status = 'submitted')::int exams,
+              (select max(score_percent) from attempts t where t.student_id = $1 and t.certification_id = c.id and t.mode = 'exam' and t.status = 'submitted')::int best_score,
+              (select max(answered_at) from attempt_answers a where a.student_id = $1 and a.certification_id = c.id) last
+       from certifications c
+       where c.id in (select certification_id from attempts where student_id = $1
+                      union select certification_id from attempt_answers where student_id = $1)
+       order by last desc nulls last`,
+      [id],
+    ),
+    db.query<{ mode: string; status: string; title: string; started_at: string; score_percent: number | null; passed: boolean | null; total_questions: number | null }>(
+      `select t.mode, t.status, c.title, t.started_at, t.score_percent, t.passed, t.total_questions
+       from attempts t join certifications c on c.id = t.certification_id
+       where t.student_id = $1 order by t.started_at desc limit 15`,
+      [id],
+    ),
+  ])
+  if (!list.rows.length) return null
+  const [row] = (await studentList(payload, { id })).students
+  return { student: row, perCert: perCert.rows, recent: recent.rows }
+}

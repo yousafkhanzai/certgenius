@@ -7,6 +7,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { LogoutButton } from '@/components/StudentAuth/LogoutButton'
+import { CountryForm } from '@/components/quiz/CountryForm'
 import { DailyGoalForm } from '@/components/quiz/DailyGoalForm'
 import { StudentHeader } from '@/components/quiz/StudentHeader'
 import { FlameIcon, QuizPage, card, formatClock, primaryButton, secondaryButton } from '@/components/quiz/ui'
@@ -155,6 +156,7 @@ export default async function AccountPage({ searchParams }: Args) {
               </div>
             </div>
             <DailyGoalForm studentId={student.id} current={stats.dailyGoal} />
+            <CountryForm studentId={student.id} current={student.country ?? null} />
           </section>
 
           <section aria-label="Shortcuts" className={`${card} flex flex-col gap-3 p-6 shadow-none`}>

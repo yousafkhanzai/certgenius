@@ -1,6 +1,7 @@
 import { addDataAndFileToRequest, APIError, type Endpoint, type PayloadRequest } from 'payload'
 
 import { isAdminUser } from '@/access/roles'
+import { publishProblems } from '@/collections/Certifications/publishRule'
 import { REPORT_STATUSES } from './data'
 
 // Admin tools API (mounted under /api/admin-tools/...). Admins only.
@@ -44,6 +45,17 @@ export const adminToolEndpoints: Endpoint[] = [
     // Publish what was last saved in the admin (the latest draft), not an older copy.
     const latest = await req.payload.findByID({ collection: 'certifications', id, draft: true, depth: 0, req })
     const { id: _id, createdAt: _c, updatedAt: _u, ...data } = latest
+    // HARD RULE, checked every time - also when re-publishing a live
+    // certification's changes (e.g. a domain added later).
+    if (publish) {
+      const problems = await publishProblems(req.payload, id, latest.domains || [])
+      if (problems.length) {
+        return Response.json(
+          { error: `Can't publish yet. Every domain needs questions and a published blog. Missing: ${problems.join('; ')}.` },
+          { status: 400 },
+        )
+      }
+    }
     await req.payload.update({
       collection: 'certifications',
       id,

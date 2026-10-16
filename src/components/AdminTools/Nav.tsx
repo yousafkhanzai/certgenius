@@ -11,6 +11,7 @@ const TOOLS = [
   { href: '/admin/health', label: 'Certification health' },
   { href: '/admin/import', label: 'Import spreadsheets' },
   { href: '/admin/reports', label: 'Problem reports', badge: true },
+  { href: '/admin/students', label: 'Students' },
   { href: '/admin/stats', label: 'Site stats' },
   { href: '/admin/security', label: 'Admin security' },
 ]

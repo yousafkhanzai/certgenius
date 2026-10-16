@@ -9,7 +9,7 @@ const INTRO = 'What we collect when you use CertGenius, why, and the choices you
 
 export default function PrivacyPage() {
   return (
-    <LegalPage path={PATH} title={TITLE} updated="15 October 2026" intro={INTRO}>
+    <LegalPage path={PATH} title={TITLE} updated="16 October 2026" intro={INTRO}>
       <h2>Who we are</h2>
       <p>
         CertGenius is a free website for practising IT certification exams. In this policy, &ldquo;we&rdquo; means CertGenius.
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <ul>
         <li>
-          <strong>Your account:</strong> your email address, your name if you add one, and your password. Passwords are stored
+          <strong>Your account:</strong> your email address, your name if you add one, your country, and your password. Passwords are stored
           only in scrambled (hashed) form, so nobody at CertGenius can read them.
         </li>
         <li>
@@ -28,6 +28,14 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Problem reports:</strong> the message you write when you report a problem with a question.
+        </li>
+        <li>
+          <strong>Approximate location:</strong> when you sign up and log in, we record the country and city your internet
+          connection comes from (worked out by our hosting provider from your IP address; no GPS). You can change your country
+          in your profile at any time. We use it to understand where our students are.
+        </li>
+        <li>
+          <strong>When you were last active</strong> on the site.
         </li>
         <li>
           <strong>Technical information:</strong> like every website, our hosting provider receives your IP address and browser

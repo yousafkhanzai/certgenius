@@ -155,6 +155,15 @@ function Group({ title, certs }: { title: string; certs: Awaited<ReturnType<type
                 </a>
               )}
               <span className="cg-tools__spacer" />
+              {c.published && c.blockers.length === 0 && (
+                <ActionButton
+                  endpoint="certification-status"
+                  payload={{ id: c.id, publish: true }}
+                  label="Publish changes"
+                  busyLabel="Publishing…"
+                  confirm={`Publish the latest saved changes of "${c.title}" (for example new domains or page text from an import)?`}
+                />
+              )}
               {c.published ? (
                 <ActionButton
                   endpoint="certification-status"

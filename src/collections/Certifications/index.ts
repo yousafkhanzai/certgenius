@@ -4,7 +4,7 @@ import { slugField } from 'payload'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { adminOnlyField, validateHttpUrl } from '../../access/roles'
-import { certificationImportEndpoint } from '../../import/endpoints'
+import { certificationImportEndpoint, domainImportEndpoint, pageImportEndpoint } from '../../import/endpoints'
 import { AFFILIATE_TYPES, CERT_CATEGORIES, CERT_STATUSES } from './options'
 import { enforcePublishRule } from './publishRule'
 
@@ -40,7 +40,7 @@ export const Certifications: CollectionConfig = {
     group: 'Certification Content',
     listSearchableFields: ['title', 'examCode', 'vendor', 'slug'],
   },
-  endpoints: [certificationImportEndpoint],
+  endpoints: [certificationImportEndpoint, domainImportEndpoint, pageImportEndpoint],
   fields: [
     {
       name: 'title',

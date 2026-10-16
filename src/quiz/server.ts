@@ -69,7 +69,7 @@ export async function getPublishedCertificationById(payload: Payload, id: number
 export async function domainQuestionCounts(payload: Payload, certId: number): Promise<Map<string, number>> {
   const { rows } = await pool(payload).query<{ domain_name: string; n: number }>(
     `select domain_name, count(*)::int as n from questions
-     where certification_id = $1 and option_a is not null and correct_answer is not null
+     where certification_id = $1 and option_a is not null and correct_answer is not null and ${IN_A_DOMAIN}
      group by domain_name`,
     [certId],
   )
@@ -78,8 +78,13 @@ export async function domainQuestionCounts(payload: Payload, certId: number): Pr
 
 // ---------- question selection ----------
 
+// A question is only ever shown when its domain is one of the certification's
+// domains. Questions uploaded before their domain exists wait, hidden, until
+// a domain with exactly that name is added.
+export const IN_A_DOMAIN = `domain_name in (select d.name from certifications_domains d where d._parent_id = questions.certification_id)`
+
 const PLAYABLE = `option_a is not null and option_b is not null and option_c is not null
-  and option_d is not null and correct_answer is not null`
+  and option_d is not null and correct_answer is not null and ${IN_A_DOMAIN}`
 
 // HARD RULE: questions are never shown in sheet order. Every list of
 // questions handed to a student is shuffled.
@@ -344,7 +349,8 @@ export async function recordAnswers(
          when last_active_date::date = current_date then greatest(current_streak, 1)
          when last_active_date::date = current_date - 1 then coalesce(current_streak, 0) + 1
          else 1 end),
-       last_active_date = now()
+       last_active_date = now(),
+       last_seen_at = now()
      where id = $1`,
     [studentId],
   )

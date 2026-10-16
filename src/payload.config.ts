@@ -69,6 +69,7 @@ export default buildConfig({
         health: { Component: '@/components/AdminTools/HealthView', path: '/health', meta: { title: 'Certification health' } },
         stats: { Component: '@/components/AdminTools/StatsView', path: '/stats', meta: { title: 'Site stats' } },
         reports: { Component: '@/components/AdminTools/ReportsView', path: '/reports', meta: { title: 'Problem reports' } },
+        students: { Component: '@/components/AdminTools/StudentsView', path: '/students', meta: { title: 'Students' } },
         // /admin/security - set or change the pattern lock on the admin.
         security: {
           Component: '@/components/AdminGate',

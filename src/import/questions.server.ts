@@ -77,11 +77,15 @@ export async function checkQuestionRows(payload: Payload, rows: ImportRow[]): Pr
     if (v.certification_slug && !cert) {
       problems.push(`unknown certification "${v.certification_slug}"`)
     }
+    // Questions may be uploaded before their domain exists. They are saved,
+    // but stay hidden from students until the certification has a domain
+    // with exactly this name (a note, not a problem).
+    const notes: string[] = []
     if (cert && v.domain_name && !cert.domains.has(v.domain_name)) {
-      problems.push(
+      notes.push(
         cert.domains.size
-          ? `domain "${v.domain_name}" is not one of this certification's domains (${[...cert.domains].join(' | ')})`
-          : `domain "${v.domain_name}" - this certification has no domains set up yet`,
+          ? `waiting for domain: "${v.domain_name}" is not one of this certification's domains yet (${[...cert.domains].join(' | ')}). It stays hidden until a domain with exactly this name is added - check the spelling.`
+          : `waiting for domain: this certification has no domains yet. The question stays hidden until a domain named "${v.domain_name}" is added.`,
       )
     }
 
@@ -109,7 +113,7 @@ export async function checkQuestionRows(payload: Payload, rows: ImportRow[]): Pr
     return {
       row,
       status: 'valid',
-      problems,
+      problems: notes,
       label,
       key,
       record: {

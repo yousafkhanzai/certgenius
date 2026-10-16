@@ -22,6 +22,41 @@ export const QUESTION_OPTIONAL_COLUMNS = ['why_a', 'why_b', 'why_c', 'why_d'] as
 
 export const CERT_COLUMNS = ['name', 'exam_code', 'vendor', 'slug', 'category', 'status'] as const
 
+// Optional extra certification columns (any order, may be left out or blank).
+export const CERT_OPTIONAL_COLUMNS = [
+  'short_description',
+  'pass_score',
+  'exam_questions',
+  'duration_minutes',
+  'delivery',
+  'official_url',
+] as const
+
+// Domains: a second sheet named "Domains" in the certification workbook, or a
+// separate file. One row per domain.
+export const DOMAIN_COLUMNS = ['certification_slug', 'domain_name', 'weight', 'blog_post_url'] as const
+export const DOMAIN_REQUIRED_COLUMNS = ['certification_slug', 'domain_name'] as const
+export const DOMAIN_SHEET_NAME = 'Domains'
+export const DOMAIN_HEADER_ALIASES: Record<string, string> = {
+  slug: 'certification_slug',
+  certification: 'certification_slug',
+  domain: 'domain_name',
+  name: 'domain_name',
+  weight_percent: 'weight',
+  weight_pct: 'weight',
+  blog: 'blog_post_url',
+  blog_url: 'blog_post_url',
+  blog_slug: 'blog_post_url',
+}
+export const DOMAIN_SHEET_OPTIONS = { aliases: DOMAIN_HEADER_ALIASES, blankPlaceholders: true }
+
+export function checkDomainHeader(header: string[]): string | null {
+  const missing = DOMAIN_REQUIRED_COLUMNS.filter((c) => !header.includes(c))
+  return missing.length
+    ? `Domains: missing column(s) ${missing.join(', ')}. Expected: ${DOMAIN_COLUMNS.join(', ')}.`
+    : null
+}
+
 export const CERT_SHEET_NAME = 'Topics and Subtopics'
 
 // The Topics spreadsheet names some columns differently; these are read as
@@ -32,6 +67,19 @@ export const CERT_HEADER_ALIASES: Record<string, string> = {
   certification_name: 'name',
   topic_category: 'category',
   code: 'exam_code',
+  description: 'short_description',
+  summary: 'short_description',
+  passing_score: 'pass_score',
+  pass_score_percent: 'pass_score',
+  pass_mark: 'pass_score',
+  questions: 'exam_questions',
+  exam_question_count: 'exam_questions',
+  number_of_questions: 'exam_questions',
+  duration: 'duration_minutes',
+  minutes: 'duration_minutes',
+  time_minutes: 'duration_minutes',
+  official_link: 'official_url',
+  official_page: 'official_url',
 }
 
 // "—", "-" and "n/a" in a spreadsheet mean "no value".
@@ -118,3 +166,42 @@ export function rowsFromSheet(
   })
   return { header, rows }
 }
+
+// Certification PAGE content: optional extra sheets in the certification
+// workbook. One row per item; every row starts with certification_slug.
+// "Page" has one row per certification; lists inside a cell (roles,
+// related certifications) are separated with " | ".
+export const PAGE_SHEETS = {
+  page: {
+    sheet: 'Page',
+    columns: [
+      'certification_slug',
+      'overview',
+      'who_its_for',
+      'background',
+      'roles',
+      'author_name',
+      'author_role',
+      'reviewer_name',
+      'reviewer_credential',
+      'compared_exam_name',
+      'related_certifications',
+    ],
+  },
+  plan: { sheet: 'Study plan', columns: ['certification_slug', 'week_label', 'title', 'text'] },
+  compare: { sheet: 'Compare', columns: ['certification_slug', 'label', 'this_exam', 'compared_exam'] },
+  resources: { sheet: 'Resources', columns: ['certification_slug', 'name', 'description', 'url'] },
+  courses: {
+    sheet: 'Courses',
+    columns: ['certification_slug', 'type', 'partner', 'title', 'url', 'bullet_1', 'bullet_2'],
+  },
+  faqs: { sheet: 'FAQs', columns: ['certification_slug', 'question', 'answer'] },
+} as const
+
+export type PageSheetKey = keyof typeof PAGE_SHEETS
+export const PAGE_SHEET_KEYS = Object.keys(PAGE_SHEETS) as PageSheetKey[]
+
+// Everything one certification's page needs, gathered from the extra sheets.
+export type PageBundle = { slug: string } & { [K in PageSheetKey]: Record<string, string>[] }
+
+export const LIST_SEPARATOR = '|'

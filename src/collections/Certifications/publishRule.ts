@@ -50,8 +50,19 @@ export async function publishProblems(
   return problems
 }
 
+// Domain names and their blogs, for spotting a change to a live certification.
+const domainShape = (domains: DomainInput[] | undefined) =>
+  JSON.stringify(
+    (domains || []).map((d) => [d.name, d.studyGuide && typeof d.studyGuide === 'object' ? d.studyGuide.id : (d.studyGuide ?? null)]),
+  )
+
 export const enforcePublishRule: CollectionBeforeChangeHook = async ({ data, originalDoc, req, context }) => {
-  const publishing = data._status === 'published' && originalDoc?._status !== 'published'
+  // Checked when a certification goes live, and when a live certification
+  // is saved with different domains (e.g. a new domain added later).
+  const publishing =
+    data._status === 'published' &&
+    (originalDoc?._status !== 'published' ||
+      (data.domains !== undefined && domainShape(data.domains) !== domainShape(originalDoc?.domains)))
   if (!publishing || context.skipPublishRule) return data
   const domains = (data.domains ?? originalDoc?.domains ?? []) as DomainInput[]
   const problems = await publishProblems(req.payload, originalDoc?.id, domains)
